@@ -8,7 +8,7 @@ GXX_ARGS=-O2 -Wall -Wextra -std=c++17
 
 SRC=src
 LIB=$(SRC)/lib
-INCL=$(LIB)/include
+INCL=-I$(LIB)/include
 
 BIN=bin
 OBJ=bin/obj
@@ -24,5 +24,16 @@ OBJ=bin/obj
 .PHONY: default all clean
 default: all
 
-all: 
-clean: 
+all: raytracer
+clean:
+	rm -f $(OBJ)/*.o
+	rm -r $(BIN)/*
+
+raytracer: $(BIN)/raytracer
+
+### FILE RULES ###
+$(OBJ)/RayTracer.o: $(SRC)/RayTracer.cpp
+	$(GXX) $(GXX_ARGS) $(INCL) -o $@ -c $<
+
+$(BIN)/raytracer: $(OBJ)/RayTracer.o
+	$(GXX) $(GXX_ARGS) $(INCL) -o $@ $^
