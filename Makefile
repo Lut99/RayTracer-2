@@ -9,8 +9,11 @@ GXX_ARGS=-O2 #-Wall -Wextra -std=c++17
 SRC=src
 LIB=$(SRC)/lib
 
-BIN=bin
-OBJ=bin/obj
+BIN=BIN
+OBJ=$(BIN)/obj
+
+TST_SRC=tests
+TST_BIN=$(BIN)/tests
 
 RENDERER_FILE=$(OBJ)/renderers/SequentialRenderer.o
 
@@ -46,7 +49,7 @@ endif
 
 
 ### PHONY RULES ###
-.PHONY: default all clean dirs raytracer
+.PHONY: default all clean dirs raytracer tests
 default: all
 
 all: raytracer
@@ -54,12 +57,16 @@ clean:
 	rm -f $(OBJ)/*.o
 	rm -f $(BIN)/*.out
 
-dirs: $(BIN) $(OBJ) $(DIRS)
+dirs: $(BIN) $(TST_BIN) $(OBJ) $(DIRS)
 
 raytracer: $(BIN)/raytracer.out
 
+tests: $(TST_BIN)/test_vec3.out
+
 ### DIRECTORY RULES ###
 $(BIN):
+	mkdir -p $@
+$(TST_BIN):
 	mkdir -p $@
 $(OBJ):
 	mkdir -p $@
@@ -77,4 +84,9 @@ $(OBJ)/RayTracer.o: $(SRC)/RayTracer.cpp | dirs
 	$(GXX) $(GXX_ARGS) $(INCL) -o $@ -c $<
 
 $(BIN)/raytracer.out: $(OBJ)/RayTracer.o $(LIBS) | dirs
+	$(GXX) $(GXX_ARGS) $(INCL) -o $@ $^
+
+
+### TEST RULES ###
+$(TST_BIN)/test_vec3.out: $(TST_SRC)/test_vec3.cpp $(LIBS) | dirs
 	$(GXX) $(GXX_ARGS) $(INCL) -o $@ $^
