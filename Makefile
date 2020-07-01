@@ -9,7 +9,7 @@ GXX_ARGS=-O2 #-Wall -Wextra -std=c++17
 SRC=src
 LIB=$(SRC)/lib
 
-BIN=BIN
+BIN=bin
 OBJ=$(BIN)/obj
 
 TST_SRC=tests
@@ -62,6 +62,9 @@ dirs: $(BIN) $(TST_BIN) $(OBJ) $(DIRS)
 raytracer: $(BIN)/raytracer.out
 
 tests: $(TST_BIN)/test_vec3.out
+	$(info Running tests...)
+	$(info )
+	bin/tests/test_vec3.out
 
 ### DIRECTORY RULES ###
 $(BIN):
