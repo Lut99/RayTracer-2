@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:40:27 PM
  * Last edited:
- *   7/1/2020, 12:50:02 PM
+ *   7/1/2020, 4:30:12 PM
  * Auto updated?
  *   Yes
  *
@@ -124,11 +124,11 @@ bool test_div() {
     // Try some
     ASSERT(test1 / 5 == Vec3(1.0 / 5, 2.0 / 5, 3.0 / 5))
     test1 /= 5;
-    ASSERT(test1 == Vec3(1.0 / 5, 2.0 / 5, 3.0 / 5))
+    ASSERT(fabs(test1 - Vec3(1.0 / 5, 2.0 / 5, 3.0 / 5)) <= 0.000000000000001)
     
-    ASSERT(test1 / test2 == Vec3(1.0 / 5 / 4, 2.0 / 5 / 5, 3.0 / 5 / 6))
+    ASSERT(fabs(test1 / test2 - Vec3(1.0 / 5 / 4, 2.0 / 5 / 5, 3.0 / 5 / 6)) <= 0.0000000000000001)
     test1 /= test2;
-    ASSERT(fabsf(test1 - Vec3(1.0 / 5 / 4, 2.0 / 5 / 5, 3.0 / 5 / 6)) < 0.00000001)
+    ASSERT(fabs(test1 - Vec3(1.0 / 5 / 4, 2.0 / 5 / 5, 3.0 / 5 / 6)) < 0.00000001)
 
     cout << "[ OK ]" << endl;
     return true;
@@ -142,7 +142,7 @@ bool test_misc() {
 
     // Try some
     ASSERT(test1.sum() == 6)
-    ASSERT(fabsf(test1.length() - 3.74165738677) < 0.000001)
+    ASSERT(fabs(test1.length() - 3.74165738677) < 0.000001)
     ASSERT(test1.length_pow2() == 14)
 
     cout << "[ OK ]" << endl;
@@ -177,10 +177,10 @@ bool test_math() {
     Vec3 test1(1, 2, 3);
 
     // Try some
-    ASSERT(expf(test1) == Vec3(expf(1), expf(2), expf(3)))
-    ASSERT(sqrtf(test1) == Vec3(sqrtf(1), sqrtf(2), sqrtf(3)))
-    ASSERT(powf(test1, 4) == Vec3(powf(1, 4), powf(2, 4), powf(3, 4)))
-    ASSERT(fabsf(-test1) == Vec3(fabsf(-1), fabsf(-2), fabsf(-3)))
+    ASSERT(exp(test1) == Vec3(exp(1), exp(2), exp(3)))
+    ASSERT(sqrt(test1) == Vec3(sqrt(1), sqrt(2), sqrt(3)))
+    ASSERT(pow(test1, 4) == Vec3(pow(1, 4), pow(2, 4), pow(3, 4)))
+    ASSERT(fabs(-test1) == Vec3(fabs(-1), fabs(-2), fabs(-3)))
 
     cout << "[ OK ]" << endl;
     return true;
@@ -197,5 +197,5 @@ int main() {
     test_access();
     test_math();
 
-    cout << "Done." << endl;
+    cout << "Done." << endl << endl;
 }
