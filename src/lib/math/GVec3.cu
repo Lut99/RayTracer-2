@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 2:19:02 PM
  * Last edited:
- *   7/1/2020, 4:42:21 PM
+ *   7/1/2020, 5:40:27 PM
  * Auto updated?
  *   Yes
  *
@@ -170,36 +170,18 @@ __device__ GVec3& GVec3::operator=(GVec3&& other) {
 }
 
 __device__ void RayTracer::swap(GVec3& vec1, GVec3& vec2) {
-    // Swap the dx's
-    Tools::swap(vec1.dx, vec2.dx);
-    Tools::swap(vec1.dy, vec2.dy);
-    Tools::swap(vec1.dz, vec2.dz);
+    // Only swap the values for x, y and z; the referenced objects will follow
+    double t = vec1.x;
+    vec1.x = vec2.x;
+    vec2.x = t;
 
-    // Swap the pointers
-    Tools::swap(vec1.data, vec2.data);
+    t = vec1.y;
+    vec1.y = vec2.y;
+    vec2.y = t;
 
-    // Swap the locality
-    Tools::swap(vec1.is_local, vec2.is_local);
-
-    // Set x, y and z again
-    if (vec1.is_local) {
-        vec1.x = vec1.dx;
-        vec1.y = vec1.dy;
-        vec1.z = vec1.dz;
-    } else {
-        vec1.x = vec1.data[0];
-        vec1.y = vec1.data[1];
-        vec1.z = vec1.data[2];
-    }
-    if (vec2.is_local) {
-        vec2.x = vec2.dx;
-        vec2.y = vec2.dy;
-        vec2.z = vec2.dz;
-    } else {
-        vec2.x = vec2.data[0];
-        vec2.y = vec2.data[1];
-        vec2.z = vec2.data[2];
-    }
+    t = vec1.z;
+    vec1.z = vec2.z;
+    vec2.z = t;
 }
 
 
