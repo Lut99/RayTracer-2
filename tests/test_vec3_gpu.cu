@@ -4,18 +4,17 @@
  * Created:
  *   6/30/2020, 5:40:27 PM
  * Last edited:
- *   7/4/2020, 2:40:49 PM
+ *   7/4/2020, 5:58:58 PM
  * Auto updated?
  *   Yes
  *
  * Description:
- *   Contains tests for the GVec3 class.
+ *   Contains tests for the Vec3 class, only then the GPU-side.
 **/
 
 #include <iostream>
 
 #include "Vec3.hpp"
-#include "GVec3.hpp"
 
 using namespace std;
 using namespace RayTracer;
@@ -38,9 +37,9 @@ __global__ void test_equal() {
         printf("   Testing equality functions...       ");
 
         // Create a couply to try
-        GVec3 test1(1, 2, 3);
-        GVec3 test2(1, 2, 3);
-        GVec3 test3(4, 5, 6);
+        Vec3 test1(1, 2, 3);
+        Vec3 test2(1, 2, 3);
+        Vec3 test3(4, 5, 6);
 
         // Try some
         ASSERT(test1 == test2)
@@ -64,17 +63,17 @@ __global__ void test_sum() {
         printf("   Testing addition...                 ");
 
         // Create a couply to try
-        GVec3 test1(1, 2, 3);
-        GVec3 test2(4, 5, 6);
+        Vec3 test1(1, 2, 3);
+        Vec3 test2(4, 5, 6);
 
         // Try some
-        ASSERT(test1 + 5 == GVec3(6, 7, 8))
+        ASSERT(test1 + 5 == Vec3(6, 7, 8))
         test1 += 5;
-        ASSERT(test1 == GVec3(6, 7, 8))
+        ASSERT(test1 == Vec3(6, 7, 8))
         
-        ASSERT(test1 + test2 == GVec3(10, 12, 14))
+        ASSERT(test1 + test2 == Vec3(10, 12, 14))
         test1 += test2;
-        ASSERT(test1 == GVec3(10, 12, 14))
+        ASSERT(test1 == Vec3(10, 12, 14))
 
         printf("[ OK ]\n");
     }
@@ -87,18 +86,18 @@ __global__ void test_sub() {
         printf("   Testing subtraction...              ");
 
         // Create a couply to try
-        GVec3 test1(1, 2, 3);
-        GVec3 test2(4, 5, 6);
+        Vec3 test1(1, 2, 3);
+        Vec3 test2(4, 5, 6);
 
         // Try some
-        ASSERT(test1 - 5 == GVec3(-4, -3, -2))
+        ASSERT(test1 - 5 == Vec3(-4, -3, -2))
         test1 -= 5;
-        ASSERT(test1 == GVec3(-4, -3, -2))
+        ASSERT(test1 == Vec3(-4, -3, -2))
         
-        ASSERT(test1 - test2 == GVec3(-8, -8, -8))
+        ASSERT(test1 - test2 == Vec3(-8, -8, -8))
         test1 -= test2;
-        ASSERT(test1 == GVec3(-8, -8, -8))
-        ASSERT(-test1 == GVec3(8, 8, 8))
+        ASSERT(test1 == Vec3(-8, -8, -8))
+        ASSERT(-test1 == Vec3(8, 8, 8))
 
         printf("[ OK ]\n");
     }
@@ -111,17 +110,17 @@ __global__ void test_mul() {
         printf("   Testing multiplication...           ");
 
         // Create a couply to try
-        GVec3 test1(1, 2, 3);
-        GVec3 test2(4, 5, 6);
+        Vec3 test1(1, 2, 3);
+        Vec3 test2(4, 5, 6);
 
         // Try some
-        ASSERT(test1 * 5 == GVec3(5, 10, 15))
+        ASSERT(test1 * 5 == Vec3(5, 10, 15))
         test1 *= 5;
-        ASSERT(test1 == GVec3(5, 10, 15))
+        ASSERT(test1 == Vec3(5, 10, 15))
         
-        ASSERT(test1 * test2 == GVec3(20, 50, 90))
+        ASSERT(test1 * test2 == Vec3(20, 50, 90))
         test1 *= test2;
-        ASSERT(test1 == GVec3(20, 50, 90))
+        ASSERT(test1 == Vec3(20, 50, 90))
 
         printf("[ OK ]\n");
     }
@@ -134,17 +133,17 @@ __global__ void test_div() {
         printf("   Testing dividation...               ");
 
         // Create a couply to try
-        GVec3 test1(1, 2, 3);
-        GVec3 test2(4, 5, 6);
+        Vec3 test1(1, 2, 3);
+        Vec3 test2(4, 5, 6);
 
         // Try some
-        ASSERT(test1 / 5 == GVec3(1.0 / 5, 2.0 / 5, 3.0 / 5))
+        ASSERT(test1 / 5 == Vec3(1.0 / 5, 2.0 / 5, 3.0 / 5))
         test1 /= 5;
-        ASSERT(fabs(test1 - GVec3(1.0 / 5, 2.0 / 5, 3.0 / 5)) <= 0.000000000000001)
+        ASSERT(fabs(test1 - Vec3(1.0 / 5, 2.0 / 5, 3.0 / 5)) <= 0.000000000000001)
         
-        ASSERT(fabs(test1 / test2 - GVec3(1.0 / 5 / 4, 2.0 / 5 / 5, 3.0 / 5 / 6)) <= 0.0000000000000001)
+        ASSERT(fabs(test1 / test2 - Vec3(1.0 / 5 / 4, 2.0 / 5 / 5, 3.0 / 5 / 6)) <= 0.0000000000000001)
         test1 /= test2;
-        ASSERT(fabs(test1 - GVec3(1.0 / 5 / 4, 2.0 / 5 / 5, 3.0 / 5 / 6)) < 0.00000001)
+        ASSERT(fabs(test1 - Vec3(1.0 / 5 / 4, 2.0 / 5 / 5, 3.0 / 5 / 6)) < 0.00000001)
 
         printf("[ OK ]\n");
     }
@@ -157,7 +156,7 @@ __global__ void test_misc() {
         printf("   Testing miscellaneous operations... ");
 
         // Create a couply to try
-        GVec3 test1(1, 2, 3);
+        Vec3 test1(1, 2, 3);
 
         // Try some
         ASSERT(test1.sum() == 6)
@@ -175,7 +174,7 @@ __global__ void test_access() {
         printf("   Testing access operations...        ");
 
         // Create a couply to try
-        GVec3 test1(1, 2, 3);
+        Vec3 test1(1, 2, 3);
 
         // Try some
         ASSERT(test1[0] == test1.x)
@@ -199,13 +198,13 @@ __global__ void test_math() {
         printf("   Testing math operations...          ");
 
         // Create a couply to try
-        GVec3 test1(1, 2, 3);
+        Vec3 test1(1, 2, 3);
 
         // Try some
-        ASSERT(exp(test1) == GVec3(exp(1.0), exp(2.0), exp(3.0)))
-        ASSERT(sqrt(test1) == GVec3(sqrt(1.0), sqrt(2.0), sqrt(3.0)))
-        ASSERT(pow(test1, 4) == GVec3(pow(1.0, 4.0), pow(2.0, 4.0), pow(3.0, 4.0)))
-        ASSERT(fabs(-test1) == GVec3(fabs(-1.0), fabs(-2.0), fabs(-3.0)))
+        ASSERT(exp(test1) == Vec3(exp(1.0), exp(2.0), exp(3.0)))
+        ASSERT(sqrt(test1) == Vec3(sqrt(1.0), sqrt(2.0), sqrt(3.0)))
+        ASSERT(pow(test1, 4) == Vec3(pow(1.0, 4.0), pow(2.0, 4.0), pow(3.0, 4.0)))
+        ASSERT(fabs(-test1) == Vec3(fabs(-1.0), fabs(-2.0), fabs(-3.0)))
 
         printf("[ OK ]\n");
     }
@@ -216,28 +215,28 @@ __global__ void test_copy_kernel(void* ptr) {
     
     if (i == 0) {
         // Initialize with a ptr
-        GVec3 test1(ptr);
+        Vec3 test1(ptr);
         
         // Do some
         test1 += 5;
         test1 -= 20;
-        test1 += GVec3(5, 10, 50);
+        test1 += Vec3(5, 10, 50);
     }
 }
 
 void test_copy() {
-    printf("   Testing Vec3 / GVec3 interaction... ");
+    printf("   Testing Vec3 CPU / GPU portability... ");
 
     // Create a CPU-side Vector
     Vec3 test1(1, 2, 3);
     
-    void* ptr = GVec3::toGPU(test1);
+    void* ptr = test1.toGPU();
 
     // Run the kernel
     test_copy_kernel<<<1, 32>>>(ptr);
 
     // Create a new vector based on the GPU data
-    Vec3 result = GVec3::fromGPU(ptr);
+    Vec3 result = Vec3::fromGPU(ptr);
 
     // Check if it is expected
     ASSERT(result == Vec3(1, 2, 3) + 5 - 20 + Vec3(5, 10, 50))

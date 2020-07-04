@@ -6,7 +6,9 @@
 GXX=g++
 GXX_ARGS=-O2 -Wall -Wextra -std=c++17
 NVCC=nvcc
-NVCC_ARGS=-O2 --gpu-architecture=compute_75 --gpu-code=sm_75
+NVCC_ARGS=-O2 --gpu-architecture=compute_75 --gpu-code=sm_75 -x cu
+CC := $(GXX)
+CC_ARGS := $(GXX_ARGS)
 
 EXT_LIBS=-lm
 
@@ -48,10 +50,13 @@ LIBS := $(LIBS) $(OBJ)/renderers/$(RENDERER).o
 
 # CUDA specific shit:
 ifeq ($(RENDERER), cuda)
-# Replace our own libraries by their CUDA counterpart
-LIBS := $(LIBS:$(OBJ)/math/Vec3.o=$(OBJ)/math/GVec3.o )
-
-# Modify the external libraries
+# Mark that we compile as CUDA
+GXX_ARGS += -DCUDA
+NVCC_ARGS += -DCUDA
+# Move to the NVCC compiler
+CC := $(NVCC)
+CC_ARGS := $(NVCC_ARGS)
+# Add external libraries
 EXT_LIBS += -L/usr/local/cuda-11.0/lib64 -lcuda -lcudart
 endif
 
@@ -70,19 +75,18 @@ all: raytracer
 clean:
 	find $(OBJ) -name "*.o" -type f -delete
 	rm -f $(BIN)/*.out
+	rm -f $(TST_BIN)/*.out
 
 dirs: $(BIN) $(TST_BIN) $(OBJ) $(DIRS)
 
 raytracer: $(BIN)/raytracer.out
 
-tests: $(TST_BIN)/test_vec3.out $(TST_BIN)/test_gvec3.out $(TST_BIN)/test_frame.out $(TST_BIN)/test_gframe.out
+tests: $(TST_BIN)/test_vec3.out $(TST_BIN)/test_vec3_gpu.out
 	$(info Running tests...)
 	$(info )
 
 	$(TST_BIN)/test_vec3.out
-	$(TST_BIN)/test_gvec3.out
-	$(TST_BIN)/test_frame.out
-	$(TST_BIN)/test_gframe.out
+	$(TST_BIN)/test_vec3_gpu.out
 
 ### DIRECTORY RULES ###
 $(BIN):
@@ -96,29 +100,32 @@ $(OBJ)/%/:
 
 ### FILE RULES ###
 $(OBJ)/%.o: $(LIB)/%.cpp | dirs
-	$(GXX) $(GXX_ARGS) $(INCL) -o $@ -c $<
+	$(CC) $(CC_ARGS) $(INCL) -o $@ -c $<
 
 $(OBJ)/%.o: $(LIB)/%.cu | dirs
 	$(NVCC) $(NVCC_ARGS) $(INCL) -o $@ -dc $<
 
 $(OBJ)/RayTracer.o: $(SRC)/RayTracer.cpp | dirs
-	$(GXX) $(GXX_ARGS) $(INCL) -o $@ -c $<
+	$(CC) $(CC_ARGS) $(INCL) -o $@ -c $<
 
 $(BIN)/raytracer.out: $(OBJ)/RayTracer.o $(LIBS) | dirs
-	$(GXX) $(GXX_ARGS) $(INCL) -o $@ $^ $(EXT_LIBS)
+	$(CC) $(CC_ARGS) $(INCL) -o $@ $^ $(EXT_LIBS)
 
 
 ### TEST RULES ###
 $(OBJ)/test_%.o: $(TST_SRC)/test_%.cpp | dirs
-	$(GXX) $(GXX_ARGS) $(INCL) -o $@ -c $<
+	$(CC) $(CC_ARGS) $(INCL) -o $@ -c $<
 
 $(OBJ)/test_%.o: $(TST_SRC)/test_%.cu | dirs
 	$(NVCC) $(NVCC_ARGS) $(INCL) -o $@ -dc $<
 
-$(TST_BIN)/test_vec3.out: $(OBJ)/test_vec3.o $(OBJ)/math/Vec3.o | dirs
-	$(GXX) $(GXX_ARGS) -o $@ $^ $(EXT_LIBS)
+$(OBJ)/test_vec3.o: $(TST_SRC)/test_vec3.cpp | dirs
+	$(CC) $(CC_ARGS) $(INCL) -o $@ -dc $<
 
-$(TST_BIN)/test_gvec3.out: $(OBJ)/test_gvec3.o $(OBJ)/math/Vec3.o $(OBJ)/math/GVec3.o | dirs
+$(TST_BIN)/test_vec3.out: $(OBJ)/test_vec3.o $(OBJ)/math/Vec3.o | dirs
+	$(CC) $(CC_ARGS) -o $@ $^ $(EXT_LIBS)
+
+$(TST_BIN)/test_vec3_gpu.out: $(OBJ)/test_vec3_gpu.o $(OBJ)/math/Vec3.o $(OBJ)/GPUTools.o | dirs
 	$(NVCC) $(NVCC_ARGS) -o $@ $^ $(EXT_LIBS)
 
 $(TST_BIN)/test_frame.out: $(OBJ)/test_frame.o $(OBJ)/frames/Frame.o $(OBJ)/frames/LodePNG.o | dirs

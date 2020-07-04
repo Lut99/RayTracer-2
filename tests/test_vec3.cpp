@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:40:27 PM
  * Last edited:
- *   7/4/2020, 2:40:46 PM
+ *   7/4/2020, 6:12:01 PM
  * Auto updated?
  *   Yes
  *
@@ -186,6 +186,43 @@ bool test_math() {
     return true;
 }
 
+#ifdef CUDA
+__global__ void test_copy_kernel(void* ptr) {
+    size_t i = blockDim.x * blockIdx.x + threadIdx.x;
+    
+    if (i == 0) {
+        // Initialize with a ptr
+        Vec3 test1(ptr);
+        
+        // Do some
+        test1 += 5;
+        test1 -= 20;
+        test1 += Vec3(5, 10, 50);
+    }
+}
+
+bool test_copy() {
+    cout << "   Testing CPU / GPU portability...     " << flush;
+
+    // Create a CPU-side Vector
+    Vec3 test1(1, 2, 3);
+    
+    void* ptr = test1.toGPU();
+
+    // Run the kernel
+    test_copy_kernel<<<1, 32>>>(ptr);
+
+    // Create a new vector based on the GPU data
+    Vec3 result = Vec3::fromGPU(ptr);
+
+    // Check if it is expected
+    ASSERT(result == Vec3(1, 2, 3) + 5 - 20 + Vec3(5, 10, 50))
+
+    cout << "[ OK ]" << endl;
+    return true;
+}
+#endif
+
 
 int main() {
     test_equal();
@@ -196,6 +233,9 @@ int main() {
     test_misc();
     test_access();
     test_math();
+    #ifdef CUDA
+    test_copy();
+    #endif
 
     cout << "Done." << endl << endl;
     return EXIT_SUCCESS;
