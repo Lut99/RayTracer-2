@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:00 PM
  * Last edited:
- *   7/4/2020, 2:52:49 PM
+ *   7/4/2020, 3:49:49 PM
  * Auto updated?
  *   Yes
  *
@@ -81,6 +81,13 @@ Frame::Frame(size_t width, size_t height) :
     height(height)
 {
     this->data = new double[width * height * 3];
+}
+
+Frame::Frame(size_t width, size_t height, double* data) :
+    width(width),
+    height(height)
+{
+    this->data = data;
 }
 
 Frame::Frame(const Frame& other) :

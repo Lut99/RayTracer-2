@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:24 PM
  * Last edited:
- *   7/4/2020, 2:53:12 PM
+ *   7/4/2020, 4:15:59 PM
  * Auto updated?
  *   Yes
  *
@@ -115,7 +115,7 @@ namespace RayTracer {
             iterator& operator+=(const Coordinate& n);
 
             /* Dereferences the iterator. */
-            inline Pixel operator*() const { return Pixel(this->pos, this->data->data + 3 * (this->pos.y * this->data->width + this->pos.x)); }
+            inline Pixel operator*() const { return this->data->operator[]({this->pos.x, this->pos.y}); }
         };
 
         /* Non-mutable iterator for the Frame class. */
@@ -153,11 +153,13 @@ namespace RayTracer {
             const_iterator& operator+=(const Coordinate& n);
 
             /* Dereferences the iterator. */
-            inline const Pixel operator*() const { return Pixel(this->pos, this->data->data + 3 * (this->pos.y * this->data->width + this->pos.x)); }
+            inline const Pixel operator*() const { return this->data->operator[]({this->pos.x, this->pos.y}); }
         };
 
         /* Constructor for the Frame class. Initializes an image with the specified dimensions with uninitialized pixels. */
         Frame(size_t width, size_t height);
+        /* Initializes the Frame from a given pointer. Will deallocate the given pointer once destroyed. */
+        Frame(size_t width, size_t height, double* data);
         /* Copy constructor for the Frame class. */
         Frame(const Frame& other);
         /* Move constructor for the Frame class. */
@@ -188,6 +190,8 @@ namespace RayTracer {
         inline const_iterator begin() const { return Frame::const_iterator(this); };
         /* Returns a const_iterator beyond the end of this Frame. */
         inline const_iterator end() const { return Frame::const_iterator(this, {0, this->height}); }
+
+        friend class GFrame;
     };
 
     void swap(Frame& f1, Frame& f2);

@@ -4,7 +4,7 @@
  * Created:
  *   7/4/2020, 12:08:25 PM
  * Last edited:
- *   7/4/2020, 3:10:07 PM
+ *   7/4/2020, 3:53:52 PM
  * Auto updated?
  *   Yes
  *
@@ -17,7 +17,6 @@
 #include "Frame.hpp"
 
 #include <iostream>
-#include <cmath>
 
 using namespace std;
 using namespace RayTracer;
