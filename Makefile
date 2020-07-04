@@ -75,13 +75,13 @@ dirs: $(BIN) $(TST_BIN) $(OBJ) $(DIRS)
 
 raytracer: $(BIN)/raytracer.out
 
-tests: $(TST_BIN)/test_vec3.out $(TST_BIN)/test_gvec3.out
+tests: $(TST_BIN)/test_vec3.out $(TST_BIN)/test_gvec3.out $(TST_BIN)/test_frame.out
 	$(info Running tests...)
 	$(info )
 
-	bin/tests/test_vec3.out
-
-	bin/tests/test_gvec3.out
+	$(TST_BIN)/test_vec3.out
+	$(TST_BIN)/test_gvec3.out
+	$(TST_BIN)/test_frame.out
 
 ### DIRECTORY RULES ###
 $(BIN):
@@ -119,4 +119,7 @@ $(TST_BIN)/test_vec3.out: $(OBJ)/test_vec3.o $(OBJ)/math/Vec3.o | dirs
 
 $(TST_BIN)/test_gvec3.out: $(OBJ)/test_gvec3.o $(OBJ)/math/Vec3.o $(OBJ)/math/GVec3.o | dirs
 	$(NVCC) $(NVCC_ARGS) -o $@ $^ $(EXT_LIBS)
+
+$(TST_BIN)/test_frame.out: $(OBJ)/test_frame.o $(OBJ)/frames/Frame.o $(OBJ)/frames/LodePNG.o | dirs
+	$(GXX) $(GXX_ARGS) -o $@ $^ $(EXT_LIBS)
 	# $(GXX) $(GXX_ARGS) -o $@ $^ $(EXT_LIBS) -L/usr/local/cuda-11.0/lib64 -lcuda -lcudart

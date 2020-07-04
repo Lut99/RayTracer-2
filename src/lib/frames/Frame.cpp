@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:00 PM
  * Last edited:
- *   7/1/2020, 6:04:03 PM
+ *   7/4/2020, 2:52:49 PM
  * Auto updated?
  *   Yes
  *
@@ -28,8 +28,9 @@ using namespace RayTracer;
 
 /***** PIXEL CLASS *****/
 
-Pixel::Pixel(double* const data) :
+Pixel::Pixel(const Coordinate& pos, double* const data) :
     data(data),
+    pos(pos),
     r(this->data[0]),
     g(this->data[1]),
     b(this->data[2])
@@ -37,6 +38,7 @@ Pixel::Pixel(double* const data) :
 
 Pixel::Pixel(const Pixel& other) :
     data(other.data),
+    pos(other.pos),
     r(this->data[0]),
     g(this->data[1]),
     b(this->data[2])
@@ -44,6 +46,7 @@ Pixel::Pixel(const Pixel& other) :
 
 Pixel::Pixel(Pixel&& other) :
     data(other.data),
+    pos(other.pos),
     r(this->data[0]),
     g(this->data[1]),
     b(this->data[2])
@@ -67,36 +70,6 @@ double& Pixel::operator[](const size_t i) {
     return this->data[i];
 }
 
-
-
-Pixel& Pixel::operator=(Pixel other) {
-    if (this != &other) {
-        swap(*this, other);
-    }
-    return *this;
-}
-
-Pixel& Pixel::operator=(Pixel&& other) {
-    if (this != &other) {
-        swap(*this, other);
-    }
-    return *this;
-}
-
-void RayTracer::swap(Pixel& p1, Pixel& p2) {
-    // Swap the channels, as this make sure the values for the data is swapped as well
-    double t = p1.r;
-    p1.r = p2.r;
-    p2.r = t;
-
-    t = p1.g;
-    p1.g = p2.g;
-    p2.g = t;
-
-    t = p1.b;
-    p1.b = p2.b;
-    p2.b = t;
-}
 
 
 
@@ -150,7 +123,7 @@ const Pixel Frame::operator[](const Coordinate& index) const {
 
     // Return the correct index Pixel
     double* ptr = this->data + 3 * (index.y * this->width + index.x);
-    return Pixel(ptr);
+    return Pixel(index, ptr);
 }
 
 Pixel Frame::operator[](const Coordinate& index) {
@@ -164,7 +137,7 @@ Pixel Frame::operator[](const Coordinate& index) {
 
     // Return the correct index Pixel
     double* ptr = this->data + 3 * (index.y * this->width + index.x);
-    return Pixel(ptr);
+    return Pixel(index, ptr);
 }
 
 
@@ -186,7 +159,7 @@ void Frame::toPNG(const string& path) const {
     // Write that to the output file using LodePNG
     unsigned result = lodepng::encode(path.c_str(), raw_image, this->width, this->height);
     if (result != 0) {
-        cerr << "Could not write to PNG file: " << lodepng_error_text(result) << endl;
+        cerr << "ERROR: void Frame::toPNG(const string& path) const: Could not write to PNG file: " << lodepng_error_text(result) << endl;
         exit(1);
     }
 }
@@ -228,4 +201,124 @@ void RayTracer::swap(Frame& f1, Frame& f2) {
 
     // Swap the data pointers
     swap(f1.data, f2.data);
+}
+
+
+
+
+
+/***** ITERATOR *****/
+
+Frame::iterator::iterator(Frame* frame) {
+    this->pos.x = 0;
+    this->pos.y = 0;
+    this->width = frame->width;
+    this->height = frame->height;
+    this->data = frame;
+}
+
+Frame::iterator::iterator(Frame* frame, const Coordinate& pos) {
+    this->pos.x = pos.x;
+    this->pos.y = pos.y; 
+    this->width = frame->width;
+    this->height = frame->height;
+    this->data = frame;  
+}
+
+
+
+Frame::iterator& Frame::iterator::operator++() {
+    this->pos.x++;
+    this->pos.y += this->pos.x / this->width;
+    this->pos.x = this->pos.x % this->width;
+    return *this;
+}
+
+Frame::iterator Frame::iterator::operator+(size_t n) const {
+    Coordinate n_pos({this->pos.x + n, this->pos.y});
+    n_pos.y += n_pos.x / this->width;
+    n_pos.x = n_pos.x % this->width;
+    return Frame::iterator(this->data, n_pos);
+}
+
+Frame::iterator Frame::iterator::operator+(const Coordinate& n) const {
+    Coordinate n_pos({this->pos.x + n.x, this->pos.y + n.y});
+    n_pos.y += n_pos.x / this->width;
+    n_pos.x = n_pos.x % this->width;
+    return Frame::iterator(this->data, n_pos);
+}
+
+Frame::iterator& Frame::iterator::operator+=(size_t n) {
+    this->pos.x += n;
+    this->pos.y += this->pos.x / this->width;
+    this->pos.x = this->pos.x % this->width;
+    return *this;
+}
+
+Frame::iterator& Frame::iterator::operator+=(const Coordinate& n) {
+    this->pos.x += n.x;
+    this->pos.y += n.y;
+    this->pos.y += this->pos.x / this->width;
+    this->pos.x = this->pos.x % this->width;
+    return *this;
+}
+
+
+
+
+
+/***** CONSTANT ITERATOR *****/
+
+Frame::const_iterator::const_iterator(const Frame* frame) {
+    this->pos.x = 0;
+    this->pos.y = 0;
+    this->width = frame->width;
+    this->height = frame->height;
+    this->data = frame;
+}
+
+Frame::const_iterator::const_iterator(const Frame* frame, const Coordinate& pos) {
+    this->pos.x = pos.x;
+    this->pos.y = pos.y; 
+    this->width = frame->width;
+    this->height = frame->height;
+    this->data = frame;  
+}
+
+
+
+Frame::const_iterator& Frame::const_iterator::operator++() {
+    this->pos.x++;
+    this->pos.y += this->pos.x / this->width;
+    this->pos.x = this->pos.x % this->width;
+    return *this;
+}
+
+Frame::const_iterator Frame::const_iterator::operator+(size_t n) const {
+    Coordinate n_pos({this->pos.x + n, this->pos.y});
+    n_pos.y += n_pos.x / this->width;
+    n_pos.x = n_pos.x % this->width;
+    return Frame::const_iterator(this->data, n_pos);
+}
+
+Frame::const_iterator Frame::const_iterator::operator+(const Coordinate& n) const {
+    Coordinate n_pos({this->pos.x + n.x, this->pos.y + n.y});
+    n_pos.y += n_pos.x / this->width;
+    n_pos.x = n_pos.x % this->width;
+    return Frame::const_iterator(this->data, n_pos);
+}
+
+Frame::const_iterator& Frame::const_iterator::operator+=(size_t n) {
+    this->pos.x += n;
+    this->pos.y += this->pos.x / this->width;
+    this->pos.x = this->pos.x % this->width;
+    return *this;
+}
+
+Frame::const_iterator& Frame::const_iterator::operator+=(const Coordinate& n) {
+    this->pos.x += n.x;
+    this->pos.y += n.y;
+    this->pos.y += this->pos.x / this->width;
+    this->pos.x = this->pos.x % this->width;
+    return *this;
 }

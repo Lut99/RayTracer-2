@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:40:27 PM
  * Last edited:
- *   7/1/2020, 5:40:50 PM
+ *   7/4/2020, 2:40:46 PM
  * Auto updated?
  *   Yes
  *
@@ -198,4 +198,5 @@ int main() {
     test_math();
 
     cout << "Done." << endl << endl;
+    return EXIT_SUCCESS;
 }
