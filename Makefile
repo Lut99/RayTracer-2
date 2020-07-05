@@ -85,11 +85,12 @@ dirs: $(BIN) $(TST_BIN) $(OBJ) $(DIRS)
 
 raytracer: $(BIN)/raytracer.out
 
-tests: $(TST_BIN)/test_vec3.out
+tests: $(TST_BIN)/test_vec3.out $(TST_BIN)/test_frame.out
 	$(info Running tests...)
 	$(info )
 
 	$(TST_BIN)/test_vec3.out
+	$(TST_BIN)/test_frame.out
 
 ### DIRECTORY RULES ###
 $(BIN):
@@ -117,23 +118,10 @@ $(BIN)/raytracer.out: $(OBJ)/RayTracer.o $(LIBS) | dirs
 
 ### TEST RULES ###
 $(OBJ)/test_%.o: $(TST_SRC)/test_%.cpp | dirs
-	$(CC) $(CC_ARGS) $(CC_BUILD_ARGS) $(INCL) -o $@ -c $<
-
-$(OBJ)/test_%.o: $(TST_SRC)/test_%.cu | dirs
-	$(NVCC) $(NVCC_ARGS) $(INCL) -o $@ -dc $<
-
-$(OBJ)/test_vec3.o: $(TST_SRC)/test_vec3.cpp | dirs
 	$(CC) $(CC_ARGS) $(CC_BUILD_ARGS) $(INCL) -o $@ $(CC_C) $<
 
 $(TST_BIN)/test_vec3.out: $(OBJ)/test_vec3.o $(OBJ)/math/Vec3.o | dirs
 	$(CC) $(CC_ARGS) -o $@ $^ $(EXT_LIBS)
 
-$(TST_BIN)/test_vec3_gpu.out: $(OBJ)/test_vec3_gpu.o $(OBJ)/math/Vec3.o $(OBJ)/GPUTools.o | dirs
-	$(NVCC) $(NVCC_ARGS) -o $@ $^ $(EXT_LIBS)
-
 $(TST_BIN)/test_frame.out: $(OBJ)/test_frame.o $(OBJ)/frames/Frame.o $(OBJ)/frames/LodePNG.o | dirs
-	$(GXX) $(GXX_ARGS) -o $@ $^ $(EXT_LIBS)
-
-$(TST_BIN)/test_gframe.out: $(OBJ)/test_gframe.o $(OBJ)/frames/GFrame.o $(OBJ)/frames/Frame.o $(OBJ)/frames/LodePNG.o | dirs
-	$(NVCC) $(NVCC_ARGS) -o $@ $^ $(EXT_LIBS)
-	# $(GXX) $(GXX_ARGS) -o $@ $^ $(EXT_LIBS) -L/usr/local/cuda-11.0/lib64 -lcuda -lcudart
+	$(CC) $(CC_ARGS) -o $@ $^ $(EXT_LIBS)

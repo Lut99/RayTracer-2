@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:00 PM
  * Last edited:
- *   7/4/2020, 3:49:49 PM
+ *   05/07/2020, 17:05:57
  * Auto updated?
  *   Yes
  *
@@ -28,7 +28,7 @@ using namespace RayTracer;
 
 /***** PIXEL CLASS *****/
 
-Pixel::Pixel(const Coordinate& pos, double* const data) :
+HOST_DEVICE Pixel::Pixel(const Coordinate& pos, double* const data) :
     data(data),
     pos(pos),
     r(this->data[0]),
@@ -36,7 +36,7 @@ Pixel::Pixel(const Coordinate& pos, double* const data) :
     b(this->data[2])
 {}
 
-Pixel::Pixel(const Pixel& other) :
+HOST_DEVICE Pixel::Pixel(const Pixel& other) :
     data(other.data),
     pos(other.pos),
     r(this->data[0]),
@@ -44,7 +44,7 @@ Pixel::Pixel(const Pixel& other) :
     b(this->data[2])
 {}
 
-Pixel::Pixel(Pixel&& other) :
+HOST_DEVICE Pixel::Pixel(Pixel&& other) :
     data(other.data),
     pos(other.pos),
     r(this->data[0]),
@@ -54,17 +54,17 @@ Pixel::Pixel(Pixel&& other) :
 
 
 
-double Pixel::operator[](const size_t i) const {
+HOST_DEVICE double Pixel::operator[](const size_t i) const {
     // Check if within bounds
-    if (i > 2) { throw std::out_of_range("ERROR: double Pixel::operator[](const size_t i) const: Index " + to_string(i) + " is out of range for Pixel with size 3."); }
+    if (i > 2) { printf("ERROR: double Pixel::operator[](const size_t i) const: Index %lu is out of range for Pixel with size 3.\n", i); }
 
     // Return
     return this->data[i];
 }
 
-double& Pixel::operator[](const size_t i) {
+HOST_DEVICE double& Pixel::operator[](const size_t i) {
     // Check if within bounds
-    if (i > 2) { throw std::out_of_range("ERROR: double Pixel::operator[](const size_t i) const: Index " + to_string(i) + " is out of range for Pixel with size 3."); }
+    if (i > 2) { printf("ERROR: double Pixel::operator[](const size_t i) const: Index %lu is out of range for Pixel with size 3.\n", i); }
 
     // Return
     return this->data[i];
@@ -80,72 +80,132 @@ Frame::Frame(size_t width, size_t height) :
     width(width),
     height(height)
 {
-    this->data = new double[width * height * 3];
+    this->data = (void*) new double[width * height * 3];
+    this->pitch = sizeof(double) * width * 3;
+    this->is_external = false;
 }
 
-Frame::Frame(size_t width, size_t height, double* data) :
+Frame::Frame(size_t width, size_t height, void* data) :
     width(width),
     height(height)
 {
     this->data = data;
+    this->pitch = sizeof(double) * width * 3;
+    this->is_external = false;
 }
 
-Frame::Frame(const Frame& other) :
+#ifdef CUDA
+__device__ Frame::Frame(const FramePtr& ptr) :
+    width(ptr.width),
+    height(ptr.height)
+{
+    this->data = ptr.data;
+    this->pitch = ptr.pitch;
+    this->is_external = true;
+}
+#endif
+
+HOST_DEVICE Frame::Frame(const Frame& other) :
     width(other.width),
     height(other.height)
 {
+    // Allocate a new buffer
+    this->data = (void*) new double[this->width * this->height * 3];
+    this->pitch = sizeof(double) * this->width * 3;
+    this->is_external = false;
+
     // Copy the data
-    this->data = new double[width * height * 3];
-    for (size_t i = 0; i < width * height * 3; i++) {
-        this->data[i] = other.data[i];
+    double* dest = (double*) this->data;
+    double* source = (double*) other.data;
+    for (size_t i = 0; i < this->width * this->height * 3; i++) {
+        dest[i] = source[i];
     }
 }
 
-Frame::Frame(Frame&& other) :
+HOST_DEVICE Frame::Frame(Frame&& other) :
     width(other.width),
     height(other.height)
 {
     // Steal the data
     this->data = other.data;
-    other.data = nullptr;
+    this->pitch = other.pitch;
+    this->is_external = other.is_external;
+    other.is_external = true;
 }
 
-Frame::~Frame() {
-    // Only delete is not null (in case we've been robbed)
-    if (this->data != nullptr) {
-        delete[] this->data;
+HOST_DEVICE Frame::~Frame() {
+    // Only delete if not local (in case we've been robbed)
+    if (!this->is_external) {
+        delete[] ((double*) this->data);
     }
 }
 
 
 
-const Pixel Frame::operator[](const Coordinate& index) const {
+HOST_DEVICE const Pixel Frame::operator[](const Coordinate& index) const {
     // Check if within bounds
     if (index.x >= this->width) {
-        throw std::out_of_range("ERROR: const Pixel Frame::operator[](const Coordinate& index) const: X-axis index " + to_string(index.x) + " is out of range for Frame of " + to_string(this->width) + " by " + to_string(this->height) + ".");
+        printf("ERROR: const Pixel Frame::operator[](const Coordinate& index) const: X-axis index %lu is out of range for Frame of %lu by %lu.\n", index.x, this->width, this->height);
     }
     if (index.y >= this->height) {
-        throw std::out_of_range("ERROR: const Pixel Frame::operator[](const Coordinate& index) const: Y-axis index " + to_string(index.y) + " is out of range for Frame of " + to_string(this->width) + " by " + to_string(this->height) + ".");
+        printf("ERROR: const Pixel Frame::operator[](const Coordinate& index) const: Y-axis index %lu is out of range for Frame of %lu by %lu.\n", index.y, this->width, this->height);
     }
 
     // Return the correct index Pixel
-    double* ptr = this->data + 3 * (index.y * this->width + index.x);
+    double* ptr = (double*) ((char*) this->data + index.y * this->pitch) + index.x * 3;
     return Pixel(index, ptr);
 }
 
-Pixel Frame::operator[](const Coordinate& index) {
+HOST_DEVICE Pixel Frame::operator[](const Coordinate& index) {
     // Check if within bounds
     if (index.x >= this->width) {
-        throw std::out_of_range("ERROR: Pixel Frame::operator[](const Coordinate& index): X-axis index " + to_string(index.x) + " is out of range for Frame of " + to_string(this->width) + " by " + to_string(this->height) + ".");
+        printf("ERROR: Pixel Frame::operator[](const Coordinate& index): X-axis index %lu is out of range for Frame of %lu by %lu.\n", index.x, this->width, this->height);
     }
     if (index.y >= this->height) {
-        throw std::out_of_range("ERROR: Pixel Frame::operator[](const Coordinate& index): Y-axis index " + to_string(index.y) + " is out of range for Frame of " + to_string(this->width) + " by " + to_string(this->height) + ".");
+        printf("ERROR: Pixel Frame::operator[](const Coordinate& index): Y-axis index %lu is out of range for Frame of %lu by %lu.\n", index.y, this->width, this->height);
     }
 
     // Return the correct index Pixel
-    double* ptr = this->data + 3 * (index.y * this->width + index.x);
+    double* ptr = (double*) ((char*) this->data + index.y * this->pitch) + index.x * 3;
     return Pixel(index, ptr);
 }
+
+
+
+#ifdef CUDA
+FramePtr Frame::toGPU() const {
+    size_t w = sizeof(double) * this->width * 3;
+    size_t h = this->height;
+
+    // Allocate enough space on the GPU
+    FramePtr ptr;
+    cudaMallocPitch(&ptr.data, &ptr.pitch, w, h);
+
+    // Copy the stuff to the GPU
+    cudaMemcpy2D(ptr.data, ptr.pitch, this->data, w, w, h, cudaMemcpyHostToDevice);
+
+    // Return the pointer & pitch
+    ptr.width = this->width;
+    ptr.height = this->height;
+    return ptr;
+}
+
+Frame Frame::fromGPU(const FramePtr& ptr) {
+    // Create a buffer for the frame
+    size_t w = sizeof(double) * ptr.width * 3;
+    size_t h = ptr.height;
+    void* data = (void*) new double[ptr.width * ptr.height * 3];
+
+    // Copy all data to the Frame
+    cudaMemcpy2D(data, w, ptr.data, ptr.pitch, w, h, cudaMemcpyDeviceToHost);
+
+    // Free the memory
+    cudaFree(ptr.data);
+
+    // Return a new Frame object with given data
+    return Frame(ptr.width, ptr.height, data);
+}
+#endif
 
 
 
@@ -153,14 +213,13 @@ void Frame::toPNG(const string& path) const {
     // Generate a 0-255, four channel vector
     vector<unsigned char> raw_image;
     raw_image.resize(this->width * this->height * 4);
-    for (unsigned int y = 0; y < this->height; y++) {
-        for (unsigned int x = 0; x < this->width; x++) {
-            // Store the data as 0-255 Red Green Blue Alhpa
-            raw_image[4 * (y * this->width + x) + 0] = (char) (255.0 * this->data[3 * (y * this->width + x)]);
-            raw_image[4 * (y * this->width + x) + 1] = (char) (255.0 * this->data[3 * (y * this->width + x) + 1]);
-            raw_image[4 * (y * this->width + x) + 2] = (char) (255.0 * this->data[3 * (y * this->width + x) + 2]);
-            raw_image[4 * (y * this->width + x) + 3] = 255;
-        }
+    for (Pixel p : *this) {
+        size_t x = p.x();
+        size_t y = p.y();
+        raw_image[4 * (y * this->width + x) + 0] = (char) (255.0 * p.r);
+        raw_image[4 * (y * this->width + x) + 1] = (char) (255.0 * p.g);
+        raw_image[4 * (y * this->width + x) + 2] = (char) (255.0 * p.b);
+        raw_image[4 * (y * this->width + x) + 3] = 255;
     }
 
     // Write that to the output file using LodePNG
@@ -173,14 +232,11 @@ void Frame::toPNG(const string& path) const {
 
 
 
-Frame& Frame::operator=(Frame other) {
-    // Only do stuff if not ourselves
-    if (this != &other) {
-        // Check if the size is correct
-        if (this->width != other.width || this->height != other.height) {
-            throw std::runtime_error("ERROR: Frame& Frame::operator=(Frame other): Cannot copy the value of a Frame with different dimensions.");
-        }
-
+HOST_DEVICE Frame& Frame::operator=(Frame other) {
+    // Check if the size is correct
+    if (this->width != other.width || this->height != other.height) {
+        printf("ERROR: Frame& Frame::operator=(Frame other): Cannot copy the value of a Frame with different dimensions.");
+    } else {
         // Swap 'em
         swap(*this, other);
     }
@@ -188,26 +244,26 @@ Frame& Frame::operator=(Frame other) {
     return *this;
 }
 
-Frame& Frame::operator=(Frame&& other) {
+HOST_DEVICE Frame& Frame::operator=(Frame&& other) {
     // Only do stuff if not ourselves
     if (this != &other) {
         // Check if the size is correct
         if (this->width != other.width || this->height != other.height) {
-            throw std::runtime_error("ERROR: Frame& Frame::operator=(Frame&& other): Cannot copy the value of a Frame with different dimensions.");
+            printf("ERROR: Frame& Frame::operator=(Frame&& other): Cannot copy the value of a Frame with different dimensions.");
+        } else {
+            // Swap 'em
+            swap(*this, other);
         }
-
-        // Swap 'em
-        swap(*this, other);
     }
 
     return *this;
 }
 
-void RayTracer::swap(Frame& f1, Frame& f2) {
-    using std::swap;
-
+HOST_DEVICE void RayTracer::swap(Frame& f1, Frame& f2) {
     // Swap the data pointers
-    swap(f1.data, f2.data);
+    void* tdata = f1.data;
+    f1.data = f2.data;
+    f2.data = tdata;
 }
 
 
@@ -216,7 +272,7 @@ void RayTracer::swap(Frame& f1, Frame& f2) {
 
 /***** ITERATOR *****/
 
-Frame::iterator::iterator(Frame* frame) {
+HOST_DEVICE Frame::iterator::iterator(Frame* frame) {
     this->pos.x = 0;
     this->pos.y = 0;
     this->width = frame->width;
@@ -224,7 +280,7 @@ Frame::iterator::iterator(Frame* frame) {
     this->data = frame;
 }
 
-Frame::iterator::iterator(Frame* frame, const Coordinate& pos) {
+HOST_DEVICE Frame::iterator::iterator(Frame* frame, const Coordinate& pos) {
     this->pos.x = pos.x;
     this->pos.y = pos.y; 
     this->width = frame->width;
@@ -234,35 +290,35 @@ Frame::iterator::iterator(Frame* frame, const Coordinate& pos) {
 
 
 
-Frame::iterator& Frame::iterator::operator++() {
+HOST_DEVICE Frame::iterator& Frame::iterator::operator++() {
     this->pos.x++;
     this->pos.y += this->pos.x / this->width;
     this->pos.x = this->pos.x % this->width;
     return *this;
 }
 
-Frame::iterator Frame::iterator::operator+(size_t n) const {
+HOST_DEVICE Frame::iterator Frame::iterator::operator+(size_t n) const {
     Coordinate n_pos({this->pos.x + n, this->pos.y});
     n_pos.y += n_pos.x / this->width;
     n_pos.x = n_pos.x % this->width;
     return Frame::iterator(this->data, n_pos);
 }
 
-Frame::iterator Frame::iterator::operator+(const Coordinate& n) const {
+HOST_DEVICE Frame::iterator Frame::iterator::operator+(const Coordinate& n) const {
     Coordinate n_pos({this->pos.x + n.x, this->pos.y + n.y});
     n_pos.y += n_pos.x / this->width;
     n_pos.x = n_pos.x % this->width;
     return Frame::iterator(this->data, n_pos);
 }
 
-Frame::iterator& Frame::iterator::operator+=(size_t n) {
+HOST_DEVICE Frame::iterator& Frame::iterator::operator+=(size_t n) {
     this->pos.x += n;
     this->pos.y += this->pos.x / this->width;
     this->pos.x = this->pos.x % this->width;
     return *this;
 }
 
-Frame::iterator& Frame::iterator::operator+=(const Coordinate& n) {
+HOST_DEVICE Frame::iterator& Frame::iterator::operator+=(const Coordinate& n) {
     this->pos.x += n.x;
     this->pos.y += n.y;
     this->pos.y += this->pos.x / this->width;
@@ -276,7 +332,7 @@ Frame::iterator& Frame::iterator::operator+=(const Coordinate& n) {
 
 /***** CONSTANT ITERATOR *****/
 
-Frame::const_iterator::const_iterator(const Frame* frame) {
+HOST_DEVICE Frame::const_iterator::const_iterator(const Frame* frame) {
     this->pos.x = 0;
     this->pos.y = 0;
     this->width = frame->width;
@@ -284,7 +340,7 @@ Frame::const_iterator::const_iterator(const Frame* frame) {
     this->data = frame;
 }
 
-Frame::const_iterator::const_iterator(const Frame* frame, const Coordinate& pos) {
+HOST_DEVICE Frame::const_iterator::const_iterator(const Frame* frame, const Coordinate& pos) {
     this->pos.x = pos.x;
     this->pos.y = pos.y; 
     this->width = frame->width;
@@ -294,35 +350,35 @@ Frame::const_iterator::const_iterator(const Frame* frame, const Coordinate& pos)
 
 
 
-Frame::const_iterator& Frame::const_iterator::operator++() {
+HOST_DEVICE Frame::const_iterator& Frame::const_iterator::operator++() {
     this->pos.x++;
     this->pos.y += this->pos.x / this->width;
     this->pos.x = this->pos.x % this->width;
     return *this;
 }
 
-Frame::const_iterator Frame::const_iterator::operator+(size_t n) const {
+HOST_DEVICE Frame::const_iterator Frame::const_iterator::operator+(size_t n) const {
     Coordinate n_pos({this->pos.x + n, this->pos.y});
     n_pos.y += n_pos.x / this->width;
     n_pos.x = n_pos.x % this->width;
     return Frame::const_iterator(this->data, n_pos);
 }
 
-Frame::const_iterator Frame::const_iterator::operator+(const Coordinate& n) const {
+HOST_DEVICE Frame::const_iterator Frame::const_iterator::operator+(const Coordinate& n) const {
     Coordinate n_pos({this->pos.x + n.x, this->pos.y + n.y});
     n_pos.y += n_pos.x / this->width;
     n_pos.x = n_pos.x % this->width;
     return Frame::const_iterator(this->data, n_pos);
 }
 
-Frame::const_iterator& Frame::const_iterator::operator+=(size_t n) {
+HOST_DEVICE Frame::const_iterator& Frame::const_iterator::operator+=(size_t n) {
     this->pos.x += n;
     this->pos.y += this->pos.x / this->width;
     this->pos.x = this->pos.x % this->width;
     return *this;
 }
 
-Frame::const_iterator& Frame::const_iterator::operator+=(const Coordinate& n) {
+HOST_DEVICE Frame::const_iterator& Frame::const_iterator::operator+=(const Coordinate& n) {
     this->pos.x += n.x;
     this->pos.y += n.y;
     this->pos.y += this->pos.x / this->width;
