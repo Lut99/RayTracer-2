@@ -4,7 +4,7 @@
  * Created:
  *   05/07/2020, 17:10:06
  * Last edited:
- *   05/07/2020, 17:41:01
+ *   05/07/2020, 17:49:27
  * Auto updated?
  *   Yes
  *
@@ -18,6 +18,7 @@
 #define RAY_HPP
 
 #include "Vec3.hpp"
+
 
 #ifdef CUDA
 #define HOST_DEVICE __host__ __device__
