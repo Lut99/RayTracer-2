@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:09:06 PM
  * Last edited:
- *   05/07/2020, 17:22:16
+ *   05/07/2020, 17:36:39
  * Auto updated?
  *   Yes
  *
@@ -78,7 +78,7 @@ HOST_DEVICE Vec3::Vec3(Vec3&& other) :
 
 
 
-HOST_DEVICE Vec3& Vec3::operator+=(const double c) {
+HOST_DEVICE Vec3& Vec3::operator+=(double c) {
     this->x += c;
     this->y += c;
     this->z += c;
@@ -94,7 +94,7 @@ HOST_DEVICE Vec3& Vec3::operator+=(const Vec3& other) {
 
 
 
-HOST_DEVICE Vec3& Vec3::operator-=(const double c) {
+HOST_DEVICE Vec3& Vec3::operator-=(double c) {
     this->x -= c;
     this->y -= c;
     this->z -= c;
@@ -110,7 +110,7 @@ HOST_DEVICE Vec3& Vec3::operator-=(const Vec3& other) {
 
 
 
-HOST_DEVICE Vec3& Vec3::operator*=(const double c) {
+HOST_DEVICE Vec3& Vec3::operator*=(double c) {
     this->x *= c;
     this->y *= c;
     this->z *= c;
