@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:24 PM
  * Last edited:
- *   05/07/2020, 16:56:06
+ *   05/07/2020, 17:19:36
  * Auto updated?
  *   Yes
  *
@@ -202,8 +202,8 @@ namespace RayTracer {
         HOST_DEVICE Pixel operator[](const Coordinate& index);
 
         #ifdef CUDA
-        /* Copies the Frame to the GPU. */
-        FramePtr toGPU() const;
+        /* Copies the Frame to the GPU. Optionally takes a point to GPU-allocated data to copy everything there. */
+        FramePtr toGPU(void* data = nullptr) const;
         /* Creates a new Frame object based on the GPU data. */
         static Frame fromGPU(const FramePtr& ptr);
         #endif

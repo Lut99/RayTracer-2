@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:00 PM
  * Last edited:
- *   05/07/2020, 17:05:57
+ *   05/07/2020, 17:21:43
  * Auto updated?
  *   Yes
  *
@@ -173,13 +173,18 @@ HOST_DEVICE Pixel Frame::operator[](const Coordinate& index) {
 
 
 #ifdef CUDA
-FramePtr Frame::toGPU() const {
+FramePtr Frame::toGPU(void* data) const {
     size_t w = sizeof(double) * this->width * 3;
     size_t h = this->height;
 
-    // Allocate enough space on the GPU
+    // Allocate space on the GPU if needed
     FramePtr ptr;
-    cudaMallocPitch(&ptr.data, &ptr.pitch, w, h);
+    if (data == nullptr) {
+        cudaMallocPitch(&ptr.data, &ptr.pitch, w, h);
+    } else {
+        ptr.data = data;
+        ptr.pitch = w;
+    }
 
     // Copy the stuff to the GPU
     cudaMemcpy2D(ptr.data, ptr.pitch, this->data, w, w, h, cudaMemcpyHostToDevice);
