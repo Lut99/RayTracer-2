@@ -6,9 +6,11 @@
 GXX=g++
 GXX_ARGS=-O2 -Wall -Wextra -std=c++17
 NVCC=nvcc
-NVCC_ARGS=-O2 --gpu-architecture=compute_75 --gpu-code=sm_75 -x cu
+NVCC_ARGS=-O2 --gpu-architecture=compute_75 --gpu-code=sm_75
 CC := $(GXX)
 CC_ARGS := $(GXX_ARGS)
+CC_BUILD_ARGS := 
+CC_C := -c
 
 EXT_LIBS=-lm
 
@@ -56,6 +58,8 @@ NVCC_ARGS += -DCUDA
 # Move to the NVCC compiler
 CC := $(NVCC)
 CC_ARGS := $(NVCC_ARGS)
+CC_BUILD_ARGS := -x cu
+CC_C := -dc
 # Add external libraries
 EXT_LIBS += -L/usr/local/cuda-11.0/lib64 -lcuda -lcudart
 endif
@@ -81,12 +85,11 @@ dirs: $(BIN) $(TST_BIN) $(OBJ) $(DIRS)
 
 raytracer: $(BIN)/raytracer.out
 
-tests: $(TST_BIN)/test_vec3.out $(TST_BIN)/test_vec3_gpu.out
+tests: $(TST_BIN)/test_vec3.out
 	$(info Running tests...)
 	$(info )
 
 	$(TST_BIN)/test_vec3.out
-	$(TST_BIN)/test_vec3_gpu.out
 
 ### DIRECTORY RULES ###
 $(BIN):
@@ -100,13 +103,13 @@ $(OBJ)/%/:
 
 ### FILE RULES ###
 $(OBJ)/%.o: $(LIB)/%.cpp | dirs
-	$(CC) $(CC_ARGS) $(INCL) -o $@ -c $<
+	$(CC) $(CC_ARGS) $(CC_BUILD_ARGS) $(INCL) -o $@ $(CC_C) $<
 
 $(OBJ)/%.o: $(LIB)/%.cu | dirs
 	$(NVCC) $(NVCC_ARGS) $(INCL) -o $@ -dc $<
 
 $(OBJ)/RayTracer.o: $(SRC)/RayTracer.cpp | dirs
-	$(CC) $(CC_ARGS) $(INCL) -o $@ -c $<
+	$(GXX) $(GXX_ARGS) $(INCL) -o $@ -c $<
 
 $(BIN)/raytracer.out: $(OBJ)/RayTracer.o $(LIBS) | dirs
 	$(CC) $(CC_ARGS) $(INCL) -o $@ $^ $(EXT_LIBS)
@@ -114,13 +117,13 @@ $(BIN)/raytracer.out: $(OBJ)/RayTracer.o $(LIBS) | dirs
 
 ### TEST RULES ###
 $(OBJ)/test_%.o: $(TST_SRC)/test_%.cpp | dirs
-	$(CC) $(CC_ARGS) $(INCL) -o $@ -c $<
+	$(CC) $(CC_ARGS) $(CC_BUILD_ARGS) $(INCL) -o $@ -c $<
 
 $(OBJ)/test_%.o: $(TST_SRC)/test_%.cu | dirs
 	$(NVCC) $(NVCC_ARGS) $(INCL) -o $@ -dc $<
 
 $(OBJ)/test_vec3.o: $(TST_SRC)/test_vec3.cpp | dirs
-	$(CC) $(CC_ARGS) $(INCL) -o $@ -dc $<
+	$(CC) $(CC_ARGS) $(CC_BUILD_ARGS) $(INCL) -o $@ $(CC_C) $<
 
 $(TST_BIN)/test_vec3.out: $(OBJ)/test_vec3.o $(OBJ)/math/Vec3.o | dirs
 	$(CC) $(CC_ARGS) -o $@ $^ $(EXT_LIBS)

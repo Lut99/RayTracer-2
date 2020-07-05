@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:09:06 PM
  * Last edited:
- *   7/4/2020, 6:06:18 PM
+ *   05/07/2020, 16:18:27
  * Auto updated?
  *   Yes
  *
@@ -176,6 +176,40 @@ HOST_DEVICE double& Vec3::operator[](const size_t i) {
     printf("ERROR: double& Vec3::operator[](const size_t i): Index %lu is out of bounds for vector of length 3.", i);
     return this->x;
 }
+
+
+
+#ifdef CUDA
+/* Copies the Vec3 object to the GPU. */
+void* Vec3::toGPU() const {
+    // Allocate a brief bit of memory
+    double temp[3] = { this->x, this->y, this->z };
+    
+    // Allocate GPU-memory
+    void* ptr;
+    cudaMalloc(&ptr, sizeof(double) * 3);
+
+    // Copy to the GPU
+    cudaMemcpy(ptr, (void*) temp, sizeof(double) * 3, cudaMemcpyHostToDevice);
+
+    return ptr;
+}
+
+/* Copies the Vec3 object from the GPU to a new CPU-side object. */
+Vec3 Vec3::fromGPU(void* ptr_gpu) {
+    // Allocate a brief bit of memory
+    double temp[3];
+
+    // Copy back from the GPU
+    cudaMemcpy((void*) temp, ptr_gpu, sizeof(double) * 3, cudaMemcpyDeviceToHost);
+
+    // Free the memory
+    cudaFree(ptr_gpu);
+
+    // Create a new Vec3 object
+    return Vec3(temp[0], temp[1], temp[2]);
+}
+#endif
 
 
 

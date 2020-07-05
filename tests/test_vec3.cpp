@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:40:27 PM
  * Last edited:
- *   7/4/2020, 6:12:01 PM
+ *   05/07/2020, 16:28:26
  * Auto updated?
  *   Yes
  *
@@ -202,7 +202,7 @@ __global__ void test_copy_kernel(void* ptr) {
 }
 
 bool test_copy() {
-    cout << "   Testing CPU / GPU portability...     " << flush;
+    cout << "   Testing CPU / GPU portability...    " << flush;
 
     // Create a CPU-side Vector
     Vec3 test1(1, 2, 3);
@@ -211,6 +211,7 @@ bool test_copy() {
 
     // Run the kernel
     test_copy_kernel<<<1, 32>>>(ptr);
+    cudaDeviceSynchronize();
 
     // Create a new vector based on the GPU data
     Vec3 result = Vec3::fromGPU(ptr);
