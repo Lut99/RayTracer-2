@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:08:07 PM
  * Last edited:
- *   05/07/2020, 17:36:34
+ *   05/07/2020, 17:39:20
  * Auto updated?
  *   Yes
  *
@@ -152,6 +152,15 @@ namespace RayTracer {
 
     /* The Point3-class is simply a typedef of Vec3, but used to distinguish functionality. */
     using Point3 = Vec3;
+
+    /* Allows to swap the order of vec + c to c + vec. */
+    HOST_DEVICE inline Vec3 operator+(double c, const Vec3& vec) { return vec + c; }
+    /* Allows to swap the order of vec - c to c - vec. */
+    HOST_DEVICE inline Vec3 operator-(double c, const Vec3& vec) { return Vec3(c - vec.x, c - vec.y, c - vec.z); }
+    /* Allows to swap the order of vec * c to c * vec. */
+    HOST_DEVICE inline Vec3 operator*(double c, const Vec3& vec) { return vec * c; }
+    /* Allows to swap the order of vec / c to c / vec. */
+    HOST_DEVICE inline Vec3 operator/(double c, const Vec3& vec) { return Vec3(c / vec.x, c / vec.y, c / vec.z); }
 
     /* Swaps two Vec3-objects. */
     HOST_DEVICE void swap(Vec3& v1, Vec3& v2);
