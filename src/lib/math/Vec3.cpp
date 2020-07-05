@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:09:06 PM
  * Last edited:
- *   05/07/2020, 16:18:27
+ *   05/07/2020, 17:22:16
  * Auto updated?
  *   Yes
  *
@@ -181,18 +181,19 @@ HOST_DEVICE double& Vec3::operator[](const size_t i) {
 
 #ifdef CUDA
 /* Copies the Vec3 object to the GPU. */
-void* Vec3::toGPU() const {
+void* Vec3::toGPU(void* data) const {
     // Allocate a brief bit of memory
     double temp[3] = { this->x, this->y, this->z };
     
-    // Allocate GPU-memory
-    void* ptr;
-    cudaMalloc(&ptr, sizeof(double) * 3);
+    // Allocate GPU-memory if needed
+    if (data == nullptr) {
+        cudaMalloc(&data, sizeof(double) * 3);
+    }
 
     // Copy to the GPU
-    cudaMemcpy(ptr, (void*) temp, sizeof(double) * 3, cudaMemcpyHostToDevice);
+    cudaMemcpy(data, (void*) temp, sizeof(double) * 3, cudaMemcpyHostToDevice);
 
-    return ptr;
+    return data;
 }
 
 /* Copies the Vec3 object from the GPU to a new CPU-side object. */

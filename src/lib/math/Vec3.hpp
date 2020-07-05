@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:08:07 PM
  * Last edited:
- *   7/4/2020, 5:59:07 PM
+ *   05/07/2020, 17:19:58
  * Auto updated?
  *   Yes
  *
@@ -140,8 +140,8 @@ namespace RayTracer {
         HOST_DEVICE double& operator[](const size_t i);
 
         #ifdef CUDA
-        /* Copies the Vec3 object to the GPU. */
-        void* toGPU() const;
+        /* Copies the Vec3 object to the GPU. Optionally takes a point to GPU-allocated data to copy everything there. */
+        void* toGPU(void* data = nullptr) const;
         /* Copies the Vec3 object from the GPU to a new CPU-side object. */
         static Vec3 fromGPU(void* ptr_gpu);
         #endif
@@ -149,6 +149,9 @@ namespace RayTracer {
         /* Allows the vector to be printed to a stream. */
         friend std::ostream& operator<<(std::ostream& os, const Vec3& vec);
     };
+
+    /* The Point3-class is simply a typedef of Vec3, but used to distinguish functionality. */
+    using Point3 = Vec3;
 
     /* Swaps two Vec3-objects. */
     HOST_DEVICE void swap(Vec3& v1, Vec3& v2);
