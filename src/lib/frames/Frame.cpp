@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:00 PM
  * Last edited:
- *   05/07/2020, 17:21:43
+ *   07/07/2020, 15:16:16
  * Auto updated?
  *   Yes
  *
@@ -26,30 +26,79 @@ using namespace std;
 using namespace RayTracer;
 
 
+/***** HELPER FUNCTIONS *****/
+
+/* Returns two of either references, based on the boolean. */
+double& get_reference(double& d1, double& d2, bool should_be_two) {
+    if (should_be_two) {
+        return d2;
+    }
+    return d1;
+}
+
+
+
+
+
+/***** COORDINATE STRUCT *****/
+
+HOST_DEVICE void RayTracer::swap(Coordinate& c1, Coordinate& c2) {
+    // Swap the x and y
+    double t = c1.x;
+    c1.x = c2.x;
+    c2.x = t;
+
+    t = c1.y;
+    c1.y = c2.y;
+    c2.y = t;
+}
+
+
+
+
+
 /***** PIXEL CLASS *****/
 
 HOST_DEVICE Pixel::Pixel(const Coordinate& pos, double* const data) :
     data(data),
+    is_external(true),
     pos(pos),
     r(this->data[0]),
     g(this->data[1]),
     b(this->data[2])
 {}
 
+HOST_DEVICE Pixel::Pixel(double r, double g, double b) :
+    is_external(false),
+    pos({0, 0}),
+    local_r(r),
+    local_g(g),
+    local_b(b),
+    r(this->local_r),
+    g(this->local_g),
+    b(this->local_b)
+{}
+
 HOST_DEVICE Pixel::Pixel(const Pixel& other) :
-    data(other.data),
-    pos(other.pos),
-    r(this->data[0]),
-    g(this->data[1]),
-    b(this->data[2])
+    is_external(false),
+    pos({0, 0}),
+    local_r(other.r),
+    local_g(other.g),
+    local_b(other.b),
+    r(this->local_r),
+    g(this->local_g),
+    b(this->local_b)
 {}
 
 HOST_DEVICE Pixel::Pixel(Pixel&& other) :
-    data(other.data),
-    pos(other.pos),
-    r(this->data[0]),
-    g(this->data[1]),
-    b(this->data[2])
+    is_external(false),
+    pos({0, 0}),
+    local_r(other.r),
+    local_g(other.g),
+    local_b(other.b),
+    r(this->local_r),
+    g(this->local_g),
+    b(this->local_b)
 {}
 
 
@@ -72,6 +121,47 @@ HOST_DEVICE double& Pixel::operator[](const size_t i) {
 
 
 
+HOST_DEVICE Pixel& Pixel::operator=(Pixel other) {
+    // Swap the two
+    swap(*this, other);
+    return *this;
+}
+
+HOST_DEVICE Pixel& Pixel::operator=(Pixel&& other) {
+    // Swap the two if and only if they aren't the same
+    if (this != &other) {
+        swap(*this, other);
+    }
+    return *this;
+}
+
+HOST_DEVICE void RayTracer::swap(Pixel& p1, Pixel& p2) {
+    // Swap the three values, regardless of their underlying location
+    double t = p1.r;
+    p1.r = p2.r;
+    p2.r = t;
+
+    t = p1.g;
+    p1.g = p2.g;
+    p2.g = t;
+
+    t = p1.b;
+    p1.b = p2.b;
+    p2.b = t;
+
+    // Also swap the Coordinates
+    swap(p1.pos, p2.pos);
+}
+
+
+
+std::ostream& RayTracer::operator<<(std::ostream& os, const Pixel& pixel) {
+    os << "(" << pixel.r << ", " << pixel.g << ", " << pixel.b << ")";
+    return os;
+}
+
+
+
 
 
 /***** FRAME CLASS *****/
@@ -85,25 +175,14 @@ Frame::Frame(size_t width, size_t height) :
     this->is_external = false;
 }
 
-Frame::Frame(size_t width, size_t height, void* data) :
+Frame::Frame(size_t width, size_t height, void* data, size_t pitch) :
     width(width),
     height(height)
 {
     this->data = data;
-    this->pitch = sizeof(double) * width * 3;
-    this->is_external = false;
-}
-
-#ifdef CUDA
-__device__ Frame::Frame(const FramePtr& ptr) :
-    width(ptr.width),
-    height(ptr.height)
-{
-    this->data = ptr.data;
-    this->pitch = ptr.pitch;
+    this->pitch = pitch;
     this->is_external = true;
 }
-#endif
 
 HOST_DEVICE Frame::Frame(const Frame& other) :
     width(other.width),
@@ -142,6 +221,93 @@ HOST_DEVICE Frame::~Frame() {
 
 
 
+#ifdef CUDA
+#include <iostream>
+Frame* Frame::GPU_create(size_t width, size_t height, void* ptr) {
+    // First, allocate the GPU-side data array
+    void* data;
+    size_t pitch;
+    cudaMallocPitch(&data, &pitch, sizeof(double) * width * 3, height);
+
+    // Then, create an empty cpu-side Frame with this pointer as target
+    Frame temp(width, height, data, pitch);
+
+    // If needed, allocate space for the Frame on the GPU.
+    Frame* ptr_gpu = (Frame*) ptr;
+    if (ptr_gpu == nullptr) {
+        cudaMalloc((void**) &ptr_gpu, sizeof(Frame));
+    }
+
+    // Copy the struct itself
+    cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Frame), cudaMemcpyHostToDevice);
+
+    // Return the pointer
+    return ptr_gpu;
+}
+
+Frame* Frame::GPU_create(const Frame& other, void* ptr) {
+    // First, allocate the GPU-side data array
+    void* data;
+    size_t pitch;
+    cudaMallocPitch(&data, &pitch, sizeof(double) * other.width * 3, other.height);
+
+    // Then, copy the CPU-side data to the GPU
+    cudaMemcpy2D(data, pitch, other.data, other.pitch, sizeof(double) * other.width * 3, other.height, cudaMemcpyHostToDevice);
+
+    // Then, create an empty frame with the given frame's properties
+    Frame temp(other.width, other.height, data, pitch);
+
+    // If needed, allocate space for the Frame on the GPU.
+    Frame* ptr_gpu = (Frame*) ptr;
+    if (ptr_gpu == nullptr) {
+        cudaMalloc((void**) &ptr_gpu, sizeof(Frame));
+    }
+
+    // Copy the struct itself
+    cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Frame), cudaMemcpyHostToDevice);
+
+    // Return the pointer
+    return ptr_gpu;
+}
+
+Frame Frame::GPU_copy(Frame* ptr_gpu) {
+    // Create a CPU-side buffer for the data
+    char buffer[sizeof(Frame)];
+
+    // Copy the GPU-side frame data into it
+    cudaMemcpy((void*) buffer, (void*) ptr_gpu, sizeof(Frame), cudaMemcpyDeviceToHost);
+
+    // Extract the Frame
+    Frame& result = *((Frame*) buffer);
+
+    // Copy the data into that frame
+    void* data = (void*) new double[result.width * result.height * 3];
+    size_t width = sizeof(double) * result.width * 3;
+    cudaMemcpy2D(data, width, result.data, result.pitch, width, result.height, cudaMemcpyDeviceToHost);
+
+    // Swap the pointers in the given struct
+    result.data = data;
+    result.pitch = width;
+    result.is_external = false;
+
+    // Return
+    return result;
+}
+
+void Frame::GPU_destroy(Frame* ptr_gpu) {
+    // First, fetch a copy of the Frame to know the data pointer
+    char buffer[sizeof(Frame)];
+    cudaMemcpy((void*) buffer, (void*) ptr_gpu, sizeof(Frame), cudaMemcpyDeviceToHost);
+    Frame& result = *((Frame*) buffer);
+
+    // Then, clear both
+    cudaFree(result.data);
+    cudaFree(ptr_gpu);
+}
+#endif
+
+
+
 HOST_DEVICE const Pixel Frame::operator[](const Coordinate& index) const {
     // Check if within bounds
     if (index.x >= this->width) {
@@ -169,48 +335,6 @@ HOST_DEVICE Pixel Frame::operator[](const Coordinate& index) {
     double* ptr = (double*) ((char*) this->data + index.y * this->pitch) + index.x * 3;
     return Pixel(index, ptr);
 }
-
-
-
-#ifdef CUDA
-FramePtr Frame::toGPU(void* data) const {
-    size_t w = sizeof(double) * this->width * 3;
-    size_t h = this->height;
-
-    // Allocate space on the GPU if needed
-    FramePtr ptr;
-    if (data == nullptr) {
-        cudaMallocPitch(&ptr.data, &ptr.pitch, w, h);
-    } else {
-        ptr.data = data;
-        ptr.pitch = w;
-    }
-
-    // Copy the stuff to the GPU
-    cudaMemcpy2D(ptr.data, ptr.pitch, this->data, w, w, h, cudaMemcpyHostToDevice);
-
-    // Return the pointer & pitch
-    ptr.width = this->width;
-    ptr.height = this->height;
-    return ptr;
-}
-
-Frame Frame::fromGPU(const FramePtr& ptr) {
-    // Create a buffer for the frame
-    size_t w = sizeof(double) * ptr.width * 3;
-    size_t h = ptr.height;
-    void* data = (void*) new double[ptr.width * ptr.height * 3];
-
-    // Copy all data to the Frame
-    cudaMemcpy2D(data, w, ptr.data, ptr.pitch, w, h, cudaMemcpyDeviceToHost);
-
-    // Free the memory
-    cudaFree(ptr.data);
-
-    // Return a new Frame object with given data
-    return Frame(ptr.width, ptr.height, data);
-}
-#endif
 
 
 

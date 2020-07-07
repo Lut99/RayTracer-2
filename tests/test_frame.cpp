@@ -4,7 +4,7 @@
  * Created:
  *   7/4/2020, 12:08:25 PM
  * Last edited:
- *   05/07/2020, 17:06:22
+ *   07/07/2020, 15:16:01
  * Auto updated?
  *   Yes
  *
@@ -21,6 +21,16 @@
 using namespace std;
 using namespace RayTracer;
 
+#define TOSTR(S) _TOSTR(S)
+#define _TOSTR(S) #S
+#ifdef CUDA
+#define CUDA_ASSERT(ID) \
+    if (cudaPeekAtLastError() != cudaSuccess) { \
+        cout << "[FAIL]" << endl << endl; \
+        cerr << "ERROR: " TOSTR(ID) ": " << cudaGetErrorString(cudaGetLastError()) << endl << endl; \
+        return false; \
+    }
+#endif
 
 bool test_values() {
     cout << "   Testing values of Frame class...    " << flush;
@@ -93,96 +103,103 @@ bool test_png() {
 }
 
 #ifdef CUDA
-__global__ void test_values_kernel(double* values_ptr, size_t values_pitch, FramePtr ptr) {
+__global__ void test_kernel(Frame* test1_ptr, Frame* test2_ptr) {
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
 
     if (i == 0) {
-        Frame frame(ptr);
+        // Create references
+        Frame& test1 = *test1_ptr;
+        Frame& test2 = *test2_ptr;
 
-        // Compare the values
-        bool succes = true;
-        size_t fx, fy, fz;
-        for (Pixel p : frame) {
-            for (size_t z = 0; z < 3; z++) {
-                if (values_ptr[p.y() * values_pitch + p.x() * 3 + z] != p[z]) {
-                    succes = false;
-                    fx = p.x();
-                    fy = p.y();
-                    fz = z;
-                    break;
-                }
-            }
-            if (!succes) {break;}
+        // First, write a gradient to test1
+        for (Pixel p : test1) {
+            p.r = float(p.x()) / float(test1.width);
+            p.g = float((test1.height - 1) - p.y()) / float(test1.height);
+            p.b = 0;
+        }
+        // Also, darken test2
+        for (Pixel p : test2) {
+            p.r *= 0.5;
+            p.g *= 0.5;
+            p.b *= 0.5;
         }
 
-        if (!succes) {
-            printf("[FAIL]\n\n");
-            printf("ERROR: GPU: Expected %f @ (%lu, %lu, %lu), got %f.\n\n", values_ptr[fy * values_pitch + fx * 3 + fz], fx, fy, fz, frame[{fx, fy}][fz]);
-        }
+        // Done
     }
 }
 
 bool test_values_gpu() {
     cout << "   Testing CPU / GPU portability...    " << flush;
 
-    // Create the values
-    double values[50][100][3];
-    for (int y = 0; y < 50; y++) {
-        for (int x = 0; x < 100; x++) {
-            for (int z = 0; z < 3; z++) {
-                values[y][x][z] = x / 100;
+    size_t width = 1920;
+    size_t height = 1200;
+
+    // Create empty CPU & GPU-side frames
+    Frame cpu_test1(width, height);
+    Frame* gpu_test1 = Frame::GPU_create(width, height);
+
+    // Now create a CPU-side test2 frame with already a gradient
+    Frame cpu_test2(width, height);
+    for (Pixel p : cpu_test2) {
+        p.r = float(p.x()) / float(width);
+        p.g = float((height - 1) - p.y()) / float(height);
+        p.b = 0;
+    }
+
+    // Create a GPU-counterpart
+    Frame* gpu_test2 = Frame::GPU_create(cpu_test2);
+
+    // Run the test kernel
+    test_kernel<<<1, 32>>>(gpu_test1, gpu_test2);
+
+    // Meanwhile, do the same operations here on the CPU
+    // First, write a gradient to test1
+    for (Pixel p : cpu_test1) {
+        p.r = float(p.x()) / float(width);
+        p.g = float((height - 1) - p.y()) / float(height);
+        p.b = 0;
+    }
+    // Also, darken test2
+    for (Pixel p : cpu_test2) {
+        p.r *= 0.5;
+        p.g *= 0.5;
+        p.b *= 0.5;
+    }
+
+    // Synchronize with the device, check for errors
+    cudaDeviceSynchronize();
+    CUDA_ASSERT(test_kernel);
+
+    // Copy the frames back from the GPU and free them over there
+    Frame gpu_result1 = Frame::GPU_copy(gpu_test1);
+    Frame gpu_result2 = Frame::GPU_copy(gpu_test2);
+    Frame::GPU_destroy(gpu_test1);
+    Frame::GPU_destroy(gpu_test2);
+
+    // Compare them with their CPU counterparts
+    for (size_t y = 0; y < height; y++) {
+        for (size_t x = 0; x < width; x++) {
+            Pixel cpu1 = cpu_test1[{x, y}];
+            Pixel gpu1 = gpu_result1[{x, y}];
+            if (cpu1 != gpu1) {
+                cout << "[FAIL]" << endl << endl;
+                cerr << "ERROR: Pixel mismatch for test1 @ (" << x << ", " << y << "): expected " << cpu1 << ", got " << gpu1 << "." << endl << endl;
+                return false;
+            }
+
+            Pixel cpu2 = cpu_test2[{x, y}];
+            Pixel gpu2 = gpu_result2[{x, y}];
+            if (cpu2 != gpu2) {
+                cout << "[FAIL]" << endl << endl;
+                cerr << "ERROR: Pixel mismatch for test2 @ (" << x << ", " << y << "): expected " << cpu2 << ", got " << gpu2 << "." << endl << endl;
+                return false;
             }
         }
     }
-    // Copy the values to the GPU
-    double* values_ptr;
-    size_t values_pitch;
-    cudaMallocPitch((void**) &values_ptr, &values_pitch, sizeof(double) * 300, 50);
-    cudaMemcpy2D((void*) values_ptr, values_pitch, values, sizeof(double) * 300, sizeof(double) * 300, 50, cudaMemcpyHostToDevice);
 
-    // Create the Frame
-    Frame frame(100, 50);
-    for (Pixel p : frame) {
-        for (size_t z = 0; z < 3; z++) {
-            p[z] = values[p.y()][p.x()][z];
-        }
-    }
-    // Also copy to GPU
-    FramePtr frame_ptr = frame.toGPU();
-
-    // Call the kernel, let it do the printing
-    test_values_kernel<<<1, 32>>>(values_ptr, values_pitch, frame_ptr);
-
-    // Retrieve the frame from the GPU
-    Frame result = Frame::fromGPU(frame_ptr);
-
-    // Clean the values memory
-    cudaFree(values_ptr);
-
-    // Do a local comparison tp verify the copying went right
-    bool succes = true;
-    size_t fx, fy, fz;
-    for (Pixel p : result) {
-        for (size_t z = 0; z < 3; z++) {
-            if (values[p.y()][p.x()][z] != p[z]) {
-                succes = false;
-                fx = p.x();
-                fy = p.y();
-                fz = z;
-                break;
-            }
-        }
-        if (!succes) {break;}
-    }
-
-    if (succes) {
-        cout << "[ OK ]" << endl;
-        return true;
-    } else {
-        cout << "[FAIL]" << endl << endl;
-        cerr << "ERROR: CPU: Expected " << values[fy][fx][fz] << " @ (" << fx << "," << fy << "," << fz << "), got " << result[{fx, fy}][fz] << "." << endl << endl;
-        return false;
-    }
+    // Succes!
+    cout << "[ OK ]" << endl;
+    return true;
 }
 #endif
 
