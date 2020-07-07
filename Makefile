@@ -125,3 +125,6 @@ $(TST_BIN)/test_vec3.out: $(OBJ)/test_vec3.o $(OBJ)/math/Vec3.o | dirs
 
 $(TST_BIN)/test_frame.out: $(OBJ)/test_frame.o $(OBJ)/frames/Frame.o $(OBJ)/frames/LodePNG.o | dirs
 	$(CC) $(CC_ARGS) -o $@ $^ $(EXT_LIBS)
+
+$(TST_BIN)/test_ray.out: $(OBJ)/test_ray.o $(OBJ)/rays/Ray.o $(OBJ)/math/Vec3.o | dirs
+	$(CC) $(CC_ARGS) -o $@ $^ $(EXT_LIBS)

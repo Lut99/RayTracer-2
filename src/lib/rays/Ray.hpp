@@ -4,7 +4,7 @@
  * Created:
  *   05/07/2020, 17:10:06
  * Last edited:
- *   05/07/2020, 17:49:27
+ *   07/07/2020, 17:36:21
  * Auto updated?
  *   Yes
  *
@@ -38,18 +38,18 @@ namespace RayTracer {
         HOST_DEVICE Ray();
         /* Constructor for the Ray class which takes an origin and a direction, which are stored locally. */
         HOST_DEVICE Ray(const Point3& origin, const Vec3& direction);
-        #ifdef CUDA
-        /* Constructor for the Ray class which initializes the internal vectors using the external memory. */
-        __device__ Ray(void* ptr);
-        #endif
 
         #ifdef CUDA
-        /* Copies the Ray and associated vectors to the GPU. Optionally takes a point to GPU-allocated data to copy everything there. */
-        void* toGPU(void* data = nullptr) const;
-        /* Copies the Ray and associated vectors back from the GPU. */
-        static Ray fromGPU(void* ptr);
-        /* Returns the amount of bytes that need to be copied to the GPU. */
-        inline size_t copy_size() const { return this->origin.copy_size() + this->direction.copy_size(); }
+        /* Initializes a default GPU-side Ray-object from the CPU. If ptr != nullptr, does not allocate but only copies to the given ptr. */
+        static Ray* GPU_create(void* ptr = nullptr);
+        /* Initializes a GPU-side Ray-object from the CPU with given origin and direction. If ptr != nullptr, does not allocate but only copies to the given ptr. */
+        static Ray* GPU_create(const Point3& origin, const Vec3& direction, void* ptr = nullptr);
+        /* Initializes a GPU-side Ray-object from the CPU which is a copy of given Ray-object. If ptr != nullptr, does not allocate but only copies to the given ptr. */
+        static Ray* GPU_create(const Ray& other, void* ptr = nullptr);
+        /* Copies relevant data from a Ray on the GPU back to the CPU as a new stack-allocated object. */
+        static Ray GPU_copy(Ray* ptr_gpu);
+        /* CPU-side destructor for the GPU-side Ray. */
+        static void GPU_free(Ray* ptr_gpu);
         #endif
 
         /* Returns a point on the Ray with t distance from the origin. */

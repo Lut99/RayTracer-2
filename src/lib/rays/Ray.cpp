@@ -4,7 +4,7 @@
  * Created:
  *   05/07/2020, 17:09:47
  * Last edited:
- *   05/07/2020, 17:49:21
+ *   07/07/2020, 17:32:28
  * Auto updated?
  *   Yes
  *
@@ -30,39 +30,76 @@ HOST_DEVICE Ray::Ray(const Point3& origin, const Vec3& direction) :
     direction(direction)
 {}
 
-#ifdef CUDA
-__device__ Ray::Ray(void* ptr) :
-    origin(ptr),
-    direction((void*) ((double*) ptr + 3))
-{}
-#endif
+
 
 
 
 #ifdef CUDA
-void* Ray::toGPU(void* data) const {
-    // Allocate enough space if needed
-    if (data == nullptr) {
-        cudaMalloc(&data, sizeof(double) * 6);
+Ray* Ray::GPU_create(void* ptr) {
+    // Create a template Ray to copy
+    Ray temp;
+
+    // If needed, allocate the required space
+    Ray* ptr_gpu = (Ray*) ptr;
+    if (ptr_gpu == nullptr) {
+        cudaMalloc((void**) &ptr_gpu, sizeof(Ray));
     }
 
-    // Copy the origin
-    this->origin.toGPU(data);
-    // Copy the direction
-    this->direction.toGPU((void*) ((double*) data + 3));
+    // Copy the Ray object over, which automatically includes any and all vectors
+    cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Ray), cudaMemcpyHostToDevice);
 
     // Return the pointer
-    return data;
+    return ptr_gpu;
 }
 
-Ray Ray::fromGPU(void* ptr) {
-    // Create a new origin from the pointer
-    Point3 origin = Point3::fromGPU(ptr);
-    // Create a new direction from the pointer
-    Vec3 direction = Vec3::fromGPU((void*) ((double*) data + 3));
+Ray* Ray::GPU_create(const Point3& origin, const Vec3& direction, void* ptr) {
+    // Create a template Ray to copy
+    Ray temp(origin, direction);
 
-    // Return as new Ray
-    return Ray(origin, direction);
+    // If needed, allocate the required space
+    Ray* ptr_gpu = (Ray*) ptr;
+    if (ptr_gpu == nullptr) {
+        cudaMalloc((void**) &ptr_gpu, sizeof(Ray));
+    }
+
+    // Copy the Ray object over, which automatically includes any and all vectors
+    cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Ray), cudaMemcpyHostToDevice);
+
+    // Return the pointer
+    return ptr_gpu;
+}
+
+Ray* Ray::GPU_create(const Ray& other, void* ptr) {
+    // Create a template Ray to copy
+    Ray temp(other);
+
+    // If needed, allocate the required space
+    Ray* ptr_gpu = (Ray*) ptr;
+    if (ptr_gpu == nullptr) {
+        cudaMalloc((void**) &ptr_gpu, sizeof(Ray));
+    }
+
+    // Copy the Ray object over, which automatically includes any and all vectors
+    cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Ray), cudaMemcpyHostToDevice);
+
+    // Return the pointer
+    return ptr_gpu;
+}
+
+Ray Ray::GPU_copy(Ray* ptr_gpu) {
+    // Allocate a local Ray to copy over
+    Ray result;
+
+    // Copy the stuff from the given pointer back
+    cudaMemcpy((void*) &result, (void*) ptr_gpu, sizeof(Ray), cudaMemcpyHostToDevice);
+
+    // Return the Ray
+    return result;
+}
+
+void Ray::GPU_free(Ray* ptr_gpu) {
+    // Free the given pointer
+    cudaFree(ptr_gpu);
 }
 #endif
 
