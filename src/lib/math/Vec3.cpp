@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:09:06 PM
  * Last edited:
- *   05/07/2020, 17:36:39
+ *   07/07/2020, 14:25:59
  * Auto updated?
  *   Yes
  *
@@ -22,59 +22,96 @@ using namespace RayTracer;
 
 
 HOST_DEVICE Vec3::Vec3() :
-    x(local_x),
-    y(local_y),
-    z(local_z)
-{
-    this->is_external = false;
-    this->local_x = 0;
-    this->local_y = 0;
-    this->local_z = 0;
-}
+    x(0),
+    y(0),
+    z(0)
+{}
 
 HOST_DEVICE Vec3::Vec3(double x, double y, double z) :
-    x(local_x),
-    y(local_y),
-    z(local_z)
-{
-    this->is_external = false;
-    this->local_x = x;
-    this->local_y = y;
-    this->local_z = z;
-}
-
-#ifdef CUDA
-__device__ Vec3::Vec3(void* data) :
-    external_data((double*) data),
-    x(this->external_data[0]),
-    y(this->external_data[1]),
-    z(this->external_data[2])
-{
-    this->is_external = true;
-}
-#endif
+    x(x),
+    y(y),
+    z(z)
+{}
 
 HOST_DEVICE Vec3::Vec3(const Vec3& other) :
-    x(local_x),
-    y(local_y),
-    z(local_z)
-{
-    this->is_external = false;
-    this->local_x = other.x;
-    this->local_y = other.y;
-    this->local_z = other.z;
-}
+    x(other.x),
+    y(other.y),
+    z(other.z)
+{}
 
 HOST_DEVICE Vec3::Vec3(Vec3&& other) :
-    x(local_x),
-    y(local_y),
-    z(local_z)
-{
-    this->is_external = false;
-    this->local_x = other.x;
-    this->local_y = other.y;
-    this->local_z = other.z;
+    x(other.x),
+    y(other.y),
+    z(other.z)
+{}
+
+
+
+#ifdef CUDA
+Vec3* Vec3::GPU_create(void* ptr) {
+    // Create a CPU-side template
+    Vec3 temp;
+
+    // Allocate new memory if that is needed
+    Vec3* ptr_gpu = (Vec3*) ptr;
+    if (ptr_gpu == nullptr) {
+        cudaMalloc((void**) &ptr_gpu, sizeof(Vec3));
+    }
+
+    // Copy the default vector
+    cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Vec3), cudaMemcpyHostToDevice);
+
+    // Return the pointer
+    return ptr_gpu;
 }
+
+Vec3* Vec3::GPU_create(double x, double y, double z, void* ptr) {
+    // Create a CPU-side template
+    Vec3 temp(x, y, z);
+
+    // Allocate new memory if that is needed
+    Vec3* ptr_gpu = (Vec3*) ptr;
+    if (ptr_gpu == nullptr) {
+        cudaMalloc((void**) &ptr_gpu, sizeof(Vec3));
+    }
+
+    // Copy the default vector
+    cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Vec3), cudaMemcpyHostToDevice);
+
+    // Return the pointer
+    return ptr_gpu;
+}
+
+Vec3* Vec3::GPU_create(const Vec3& other, void* ptr) {
+    // Allocate new memory if that is needed
+    Vec3* ptr_gpu = (Vec3*) ptr;
+    if (ptr_gpu == nullptr) {
+        cudaMalloc((void**) &ptr_gpu, sizeof(Vec3));
+    }
+
+    // Copy the given vector
+    cudaMemcpy((void*) ptr_gpu, (void*) &other, sizeof(Vec3), cudaMemcpyHostToDevice);
+
+    // Return the pointer
+    return ptr_gpu;
+}
+
+Vec3 Vec3::GPU_copy(Vec3* ptr_gpu) {
+    // Create a Vec3 buffer on the CPU
+    Vec3 result;
+
+    // Copy the GPU-side one into it
+    cudaMemcpy((void*) &result, (void*) ptr_gpu, sizeof(Vec3), cudaMemcpyDeviceToHost);
+
+    // Return the new Vec as copy of the buffer
+    return result;
+}
+
+void Vec3::GPU_destroy(Vec3* ptr_gpu) {
+    // Deallocate the given gpu-side pointer
+    cudaFree((void*) ptr_gpu);
+}
+#endif
 
 
 
@@ -176,41 +213,6 @@ HOST_DEVICE double& Vec3::operator[](const size_t i) {
     printf("ERROR: double& Vec3::operator[](const size_t i): Index %lu is out of bounds for vector of length 3.", i);
     return this->x;
 }
-
-
-
-#ifdef CUDA
-/* Copies the Vec3 object to the GPU. */
-void* Vec3::toGPU(void* data) const {
-    // Allocate a brief bit of memory
-    double temp[3] = { this->x, this->y, this->z };
-    
-    // Allocate GPU-memory if needed
-    if (data == nullptr) {
-        cudaMalloc(&data, sizeof(double) * 3);
-    }
-
-    // Copy to the GPU
-    cudaMemcpy(data, (void*) temp, sizeof(double) * 3, cudaMemcpyHostToDevice);
-
-    return data;
-}
-
-/* Copies the Vec3 object from the GPU to a new CPU-side object. */
-Vec3 Vec3::fromGPU(void* ptr_gpu) {
-    // Allocate a brief bit of memory
-    double temp[3];
-
-    // Copy back from the GPU
-    cudaMemcpy((void*) temp, ptr_gpu, sizeof(double) * 3, cudaMemcpyDeviceToHost);
-
-    // Free the memory
-    cudaFree(ptr_gpu);
-
-    // Create a new Vec3 object
-    return Vec3(temp[0], temp[1], temp[2]);
-}
-#endif
 
 
 

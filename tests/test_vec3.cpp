@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:40:27 PM
  * Last edited:
- *   05/07/2020, 16:28:26
+ *   07/07/2020, 14:11:13
  * Auto updated?
  *   Yes
  *
@@ -27,7 +27,16 @@ using namespace RayTracer;
         cout << "[FAIL]" << endl << endl; \
         cerr << "ERROR: Expression '" TOSTR(EXPR) "' is incorrect." << endl << endl; \
         return false; \
-    } 
+    }
+
+#ifdef CUDA
+#define CUDA_ASSERT(ID) \
+    if (cudaPeekAtLastError() != cudaSuccess) { \
+        cout << "[FAIL]" << endl << endl; \
+        cerr << "ERROR: " TOSTR(ID) ": " << cudaGetErrorString(cudaGetLastError()) << endl << endl; \
+        return false; \
+    }
+#endif
 
 
 bool test_equal() {
@@ -187,37 +196,62 @@ bool test_math() {
 }
 
 #ifdef CUDA
-__global__ void test_copy_kernel(void* ptr) {
+__global__ void test_copy_kernel(Vec3* test1_ptr, Vec3* test2_ptr, Vec3* test3_ptr) {
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
     
     if (i == 0) {
-        // Initialize with a ptr
-        Vec3 test1(ptr);
-        
-        // Do some
+        // Get references to the given objects
+        Vec3& test1 = *test1_ptr;
+        Vec3& test2 = *test2_ptr;
+        Vec3& test3 = *test3_ptr;
+
+        // // Do the tests
         test1 += 5;
         test1 -= 20;
         test1 += Vec3(5, 10, 50);
+        test2 += 5;
+        test2 -= 20;
+        test2 += Vec3(5, 10, 50);
+        test3 += 5;
+        test3 -= 20;
+        test3 += Vec3(5, 10, 50);
+
+        // Done
     }
 }
 
 bool test_copy() {
     cout << "   Testing CPU / GPU portability...    " << flush;
 
-    // Create a CPU-side Vector
-    Vec3 test1(1, 2, 3);
-    
-    void* ptr = test1.toGPU();
+    // Create an empty GPU vector.
+    Vec3* test1 = Vec3::GPU_create();
+
+    // Create a GPU-side vector with data
+    Vec3* test2 = Vec3::GPU_create(1, 2, 3);
+
+    // Create a CPU-side Vector and copy that to the GPU
+    Vec3 cpu_test3(4, 5, 6);
+    Vec3* test3 = Vec3::GPU_create(cpu_test3);
 
     // Run the kernel
-    test_copy_kernel<<<1, 32>>>(ptr);
+    test_copy_kernel<<<1, 32>>>(test1, test2, test3);
     cudaDeviceSynchronize();
+    CUDA_ASSERT(test_copy_kernel);
 
-    // Create a new vector based on the GPU data
-    Vec3 result = Vec3::fromGPU(ptr);
+    // Copy all vectors back to the CPU
+    Vec3 result1 = Vec3::GPU_copy(test1);
+    Vec3 result2 = Vec3::GPU_copy(test2);
+    Vec3 result3 = Vec3::GPU_copy(test3);
+    
+    // Clean the GPU-side ones
+    Vec3::GPU_destroy(test1);
+    Vec3::GPU_destroy(test2);
+    Vec3::GPU_destroy(test3);
 
     // Check if it is expected
-    ASSERT(result == Vec3(1, 2, 3) + 5 - 20 + Vec3(5, 10, 50))
+    ASSERT(result1 == Vec3() + 5 - 20 + Vec3(5, 10, 50));
+    ASSERT(result2 == Vec3(1, 2, 3) + 5 - 20 + Vec3(5, 10, 50));
+    ASSERT(result3 == Vec3(4, 5, 6) + 5 - 20 + Vec3(5, 10, 50));
 
     cout << "[ OK ]" << endl;
     return true;

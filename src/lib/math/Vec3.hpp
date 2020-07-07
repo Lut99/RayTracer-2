@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:08:07 PM
  * Last edited:
- *   05/07/2020, 17:39:20
+ *   07/07/2020, 14:11:40
  * Auto updated?
  *   Yes
  *
@@ -36,21 +36,13 @@ namespace RayTracer {
     using ::fabs;
 
     class Vec3 {
-    private:
-        /* Determines if the vector is using external memory or stores it in the object memory. */
-        bool is_external;
-        /* Local value storage. */
-        double local_x, local_y, local_z;
-        /* External storage reference. */
-        double* external_data;
-
     public:
         /* The x-coordinate of the vector. */
-        double& x;
+        double x;
         /* The y-coordinate of the vector. */
-        double& y;
+        double y;
         /* The z-coordinate of the vector. */
-        double& z;
+        double z;
 
         /* Default constructor for the Vec3-class which initializes a vector with all-zero elements. */
         HOST_DEVICE Vec3();
@@ -64,6 +56,19 @@ namespace RayTracer {
         HOST_DEVICE Vec3(const Vec3& other);
         /* Move constructor for the Vec3-class. */
         HOST_DEVICE Vec3(Vec3&& other);
+        
+        #ifdef CUDA
+        /* CPU-side default constructor for a GPU-side Vec3. Allocates only if ptr == nullptr, and then copies a default Vec3 to that memory location. */
+        static Vec3* GPU_create(void* ptr = nullptr);
+        /* CPU-side constructor for a GPU-side Vec3. Allocates only if ptr == nullptr, and then copies a Vec3 with given data to that memory location. */
+        static Vec3* GPU_create(double x, double y, double z, void* ptr = nullptr);
+        /* CPU-side constructor for a GPU-side Vec3. Allocates only if ptr == nullptr, and then copies a copied Vec3 to that memory location. */
+        static Vec3* GPU_create(const Vec3& other, void* ptr = nullptr);
+        /* Copies a GPU-side Vec3 to a newly (stack-)allocated CPU-side Vec3. Does not deallocate the GPU-side. */
+        static Vec3 GPU_copy(Vec3* ptr_gpu);
+        /* GPU-side destructor for the GPU-side Vec3. */
+        static void GPU_destroy(Vec3* ptr_gpu);
+        #endif
 
         /* Compares if two vectors are equal. */
         HOST_DEVICE inline bool operator==(const Vec3& other) const { return this->x == other.x && this->y == other.y && this->z == other.z; }
@@ -138,13 +143,6 @@ namespace RayTracer {
         HOST_DEVICE double operator[](const size_t i) const;
         /* Returns x, y or z based on their index (mutable). */
         HOST_DEVICE double& operator[](const size_t i);
-
-        #ifdef CUDA
-        /* Copies the Vec3 object to the GPU. Optionally takes a point to GPU-allocated data to copy everything there. */
-        void* toGPU(void* data = nullptr) const;
-        /* Copies the Vec3 object from the GPU to a new CPU-side object. */
-        static Vec3 fromGPU(void* ptr_gpu);
-        #endif
 
         /* Allows the vector to be printed to a stream. */
         friend std::ostream& operator<<(std::ostream& os, const Vec3& vec);
