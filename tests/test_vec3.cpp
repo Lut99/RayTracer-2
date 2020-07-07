@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:40:27 PM
  * Last edited:
- *   07/07/2020, 14:11:13
+ *   07/07/2020, 17:32:28
  * Auto updated?
  *   Yes
  *
@@ -244,9 +244,9 @@ bool test_copy() {
     Vec3 result3 = Vec3::GPU_copy(test3);
     
     // Clean the GPU-side ones
-    Vec3::GPU_destroy(test1);
-    Vec3::GPU_destroy(test2);
-    Vec3::GPU_destroy(test3);
+    Vec3::GPU_free(test1);
+    Vec3::GPU_free(test2);
+    Vec3::GPU_free(test3);
 
     // Check if it is expected
     ASSERT(result1 == Vec3() + 5 - 20 + Vec3(5, 10, 50));

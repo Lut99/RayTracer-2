@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:00 PM
  * Last edited:
- *   07/07/2020, 15:16:16
+ *   07/07/2020, 17:32:28
  * Auto updated?
  *   Yes
  *
@@ -294,7 +294,7 @@ Frame Frame::GPU_copy(Frame* ptr_gpu) {
     return result;
 }
 
-void Frame::GPU_destroy(Frame* ptr_gpu) {
+void Frame::GPU_free(Frame* ptr_gpu) {
     // First, fetch a copy of the Frame to know the data pointer
     char buffer[sizeof(Frame)];
     cudaMemcpy((void*) buffer, (void*) ptr_gpu, sizeof(Frame), cudaMemcpyDeviceToHost);

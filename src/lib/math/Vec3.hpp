@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:08:07 PM
  * Last edited:
- *   07/07/2020, 14:11:40
+ *   07/07/2020, 17:32:28
  * Auto updated?
  *   Yes
  *
@@ -48,10 +48,6 @@ namespace RayTracer {
         HOST_DEVICE Vec3();
         /* Constructor which takes three elements for the vector to be initialized with. */
         HOST_DEVICE Vec3(double x, double y, double z);
-        #ifdef CUDA
-        /* GPU-side constructor for using external memory. */
-        __device__ Vec3(void* data);
-        #endif
         /* Copy constructor for the Vec3-class. */
         HOST_DEVICE Vec3(const Vec3& other);
         /* Move constructor for the Vec3-class. */
@@ -67,7 +63,7 @@ namespace RayTracer {
         /* Copies a GPU-side Vec3 to a newly (stack-)allocated CPU-side Vec3. Does not deallocate the GPU-side. */
         static Vec3 GPU_copy(Vec3* ptr_gpu);
         /* GPU-side destructor for the GPU-side Vec3. */
-        static void GPU_destroy(Vec3* ptr_gpu);
+        static void GPU_free(Vec3* ptr_gpu);
         #endif
 
         /* Compares if two vectors are equal. */

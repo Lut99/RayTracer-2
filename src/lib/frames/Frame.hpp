@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:24 PM
  * Last edited:
- *   07/07/2020, 15:01:46
+ *   07/07/2020, 17:32:28
  * Auto updated?
  *   Yes
  *
@@ -231,7 +231,7 @@ namespace RayTracer {
         /* Copies a GPU-side Frame to a newly (stack-)allocated CPU-side Frame. Does not deallocate the GPU-side. */
         static Frame GPU_copy(Frame* ptr_gpu);
         /* GPU-side destructor for the GPU-side Frame. */
-        static void GPU_destroy(Frame* ptr_gpu);
+        static void GPU_free(Frame* ptr_gpu);
         #endif
 
         /* Indexes the Frame for a given coordinate (non-mutable). */

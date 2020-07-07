@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:09:06 PM
  * Last edited:
- *   07/07/2020, 14:25:59
+ *   07/07/2020, 17:32:28
  * Auto updated?
  *   Yes
  *
@@ -107,7 +107,7 @@ Vec3 Vec3::GPU_copy(Vec3* ptr_gpu) {
     return result;
 }
 
-void Vec3::GPU_destroy(Vec3* ptr_gpu) {
+void Vec3::GPU_free(Vec3* ptr_gpu) {
     // Deallocate the given gpu-side pointer
     cudaFree((void*) ptr_gpu);
 }

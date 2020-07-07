@@ -4,7 +4,7 @@
  * Created:
  *   7/4/2020, 12:08:25 PM
  * Last edited:
- *   07/07/2020, 15:16:01
+ *   07/07/2020, 17:32:28
  * Auto updated?
  *   Yes
  *
@@ -173,8 +173,8 @@ bool test_values_gpu() {
     // Copy the frames back from the GPU and free them over there
     Frame gpu_result1 = Frame::GPU_copy(gpu_test1);
     Frame gpu_result2 = Frame::GPU_copy(gpu_test2);
-    Frame::GPU_destroy(gpu_test1);
-    Frame::GPU_destroy(gpu_test2);
+    Frame::GPU_free(gpu_test1);
+    Frame::GPU_free(gpu_test2);
 
     // Compare them with their CPU counterparts
     for (size_t y = 0; y < height; y++) {
