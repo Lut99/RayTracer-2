@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:00 PM
  * Last edited:
- *   07/07/2020, 17:32:28
+ *   08/07/2020, 14:34:45
  * Auto updated?
  *   Yes
  *
@@ -361,16 +361,14 @@ void Frame::toPNG(const string& path) const {
 
 
 
-HOST_DEVICE Frame& Frame::operator=(Frame other) {
+HOST_DEVICE Frame& Frame::operator=(const Frame& other) {
     // Check if the size is correct
     if (this->width != other.width || this->height != other.height) {
         printf("ERROR: Frame& Frame::operator=(Frame other): Cannot copy the value of a Frame with different dimensions.");
-    } else {
-        // Swap 'em
-        swap(*this, other);
+        return *this;
     }
 
-    return *this;
+    return *this = Frame(other);
 }
 
 HOST_DEVICE Frame& Frame::operator=(Frame&& other) {

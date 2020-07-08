@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:24 PM
  * Last edited:
- *   07/07/2020, 17:32:28
+ *   08/07/2020, 14:34:21
  * Auto updated?
  *   Yes
  *
@@ -243,7 +243,7 @@ namespace RayTracer {
         void toPNG(const std::string& path) const;
 
         /* Copy assignment operator for the Frame class. Note that this throws a runtime_error if the Frame is not the same size. */
-        HOST_DEVICE Frame& operator=(Frame other);
+        HOST_DEVICE Frame& operator=(const Frame& other);
         /* Move assignment operator for the Frame class. Note that this throws a runtime_error if the Frame is not the same size. */
         HOST_DEVICE Frame& operator=(Frame&& other);
         /* Swap operator for the Frame class. Note that this does not swap the size, and therefore expects the two Frames to have the same size. */

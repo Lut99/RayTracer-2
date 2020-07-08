@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:08:07 PM
  * Last edited:
- *   07/07/2020, 17:32:28
+ *   08/07/2020, 14:35:37
  * Auto updated?
  *   Yes
  *
@@ -129,7 +129,7 @@ namespace RayTracer {
         HOST_DEVICE inline Vec3 normalize() const { return Vec3(*this) / this->length(); }
 
         /* Copy assignment operator for the Vec3-class. */
-        HOST_DEVICE Vec3& operator=(Vec3 other);
+        HOST_DEVICE inline Vec3& operator=(const Vec3& other) { return *this = Vec3(other); }
         /* Move assignment operator for the Vec3-class. */
         HOST_DEVICE Vec3& operator=(Vec3&& other);
         /* Swap operator for the Vec3-class. */
