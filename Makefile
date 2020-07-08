@@ -6,7 +6,7 @@
 GXX=g++
 GXX_ARGS=-O2 -Wall -Wextra -std=c++17
 NVCC=nvcc
-NVCC_ARGS=-O2 --gpu-architecture=compute_75 --gpu-code=sm_75
+NVCC_ARGS=-O2 -std=c++17 --gpu-architecture=compute_75 --gpu-code=sm_75
 CC := $(GXX)
 CC_ARGS := $(GXX_ARGS)
 CC_BUILD_ARGS := 
@@ -85,12 +85,13 @@ dirs: $(BIN) $(TST_BIN) $(OBJ) $(DIRS)
 
 raytracer: $(BIN)/raytracer.out
 
-tests: $(TST_BIN)/test_vec3.out $(TST_BIN)/test_frame.out
+tests: $(TST_BIN)/test_vec3.out $(TST_BIN)/test_frame.out $(TST_BIN)/test_ray.out
 	$(info Running tests...)
 	$(info )
 
 	$(TST_BIN)/test_vec3.out
 	$(TST_BIN)/test_frame.out
+	$(TST_BIN)/test_ray.out
 
 ### DIRECTORY RULES ###
 $(BIN):

@@ -4,7 +4,7 @@
  * Created:
  *   07/07/2020, 17:15:03
  * Last edited:
- *   07/07/2020, 17:35:33
+ *   08/07/2020, 14:47:58
  * Auto updated?
  *   Yes
  *
@@ -39,14 +39,14 @@ using namespace RayTracer;
 
 
 #ifdef CUDA
-__global__ void test_gpu_kernel(Point3& result, Ray* test1_ptr, Ray* test2_ptr, Ray* test3_ptr) {
+__global__ void test_gpu_kernel(Point3* result, Ray* test1_ptr, Ray* test2_ptr, Ray* test3_ptr) {
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
 
     if (i == 0) {
         // Only get the result of at() from test3_ptr
         Ray& test3 = *test3_ptr;
 
-        result = test3.at(42);
+        *result = test3.at(42);
     }
 }
 
@@ -62,15 +62,17 @@ bool test_gpu() {
     Ray* test3 = Ray::GPU_create(test3_cpu);
 
     // Run the kernel
-    Point3 result;
-    test_gpu_kernel<<<1, 32>>>(result, test1, test2, test3);
+    Point3* result_gpu = Point3::GPU_create();
+    test_gpu_kernel<<<1, 32>>>(result_gpu, test1, test2, test3);
     cudaDeviceSynchronize();
     CUDA_ASSERT(test_gpu_kernel);
 
     // Copy the results back & free 'em
+    Point3 result = Point3::GPU_copy(result_gpu);
     Ray result1 = Ray::GPU_copy(test1);
     Ray result2 = Ray::GPU_copy(test2);
     Ray result3 = Ray::GPU_copy(test3);
+    Point3::GPU_free(result_gpu);
     Ray::GPU_free(test1);
     Ray::GPU_free(test2);
     Ray::GPU_free(test3);

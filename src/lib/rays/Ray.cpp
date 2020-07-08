@@ -4,7 +4,7 @@
  * Created:
  *   05/07/2020, 17:09:47
  * Last edited:
- *   07/07/2020, 17:32:28
+ *   08/07/2020, 14:43:11
  * Auto updated?
  *   Yes
  *
@@ -28,6 +28,16 @@ HOST_DEVICE Ray::Ray() :
 HOST_DEVICE Ray::Ray(const Point3& origin, const Vec3& direction) :
     origin(origin),
     direction(direction)
+{}
+
+HOST_DEVICE Ray::Ray(const Ray& other) :
+    origin(other.origin),
+    direction(other.direction)
+{}
+
+HOST_DEVICE Ray::Ray(Ray&& other) :
+    origin(other.origin),
+    direction(other.direction)
 {}
 
 
@@ -91,7 +101,7 @@ Ray Ray::GPU_copy(Ray* ptr_gpu) {
     Ray result;
 
     // Copy the stuff from the given pointer back
-    cudaMemcpy((void*) &result, (void*) ptr_gpu, sizeof(Ray), cudaMemcpyHostToDevice);
+    cudaMemcpy((void*) &result, (void*) ptr_gpu, sizeof(Ray), cudaMemcpyDeviceToHost);
 
     // Return the Ray
     return result;
@@ -105,11 +115,6 @@ void Ray::GPU_free(Ray* ptr_gpu) {
 
 
 
-HOST_DEVICE Ray& Ray::operator=(Ray other) {
-    swap(*this, other);
-    return *this;
-}
-
 HOST_DEVICE Ray& Ray::operator=(Ray&& other) {
     // Only swap if not the same
     if (this != &other) {
@@ -122,4 +127,11 @@ HOST_DEVICE void RayTracer::swap(Ray& r1, Ray& r2) {
     // Simply swap the two vectors
     swap(r1.origin, r2.origin);
     swap(r1.direction, r2.direction);
+}
+
+
+
+ostream& RayTracer::operator<<(ostream& os, const Ray& ray) {
+    os << "[Ray : orig " << ray.origin << ", dir " << ray.direction << "]";
+    return os;
 }
