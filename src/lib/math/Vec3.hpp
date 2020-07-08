@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:08:07 PM
  * Last edited:
- *   08/07/2020, 14:35:37
+ *   08/07/2020, 22:02:32
  * Auto updated?
  *   Yes
  *
@@ -119,8 +119,6 @@ namespace RayTracer {
         /* Divides all elements in this vector by another vector (element-wise) and returns the result in this one. */
         HOST_DEVICE inline Vec3& operator/=(const Vec3& other) { return *this *= other.inv(); }
 
-        /* Returns the sum of all elements of this vector. */
-        HOST_DEVICE inline double sum() const { return this->x + this->y + this->z; }
         /* Returns the length of this vector. */
         HOST_DEVICE inline double length() const { return sqrt(this->x * this->x + this->y * this->y + this->z * this->z); }
         /* Returns the squared length of this vector. */
