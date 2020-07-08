@@ -56,5 +56,6 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "bit": "cpp"
-    }
+    },
+    "C_Cpp.dimInactiveRegions": false
 }
