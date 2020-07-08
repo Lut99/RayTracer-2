@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:09:06 PM
  * Last edited:
- *   08/07/2020, 14:35:29
+ *   08/07/2020, 14:47:47
  * Auto updated?
  *   Yes
  *
@@ -164,8 +164,8 @@ HOST_DEVICE Vec3& Vec3::operator*=(const Vec3& other) {
 
 
 HOST_DEVICE Vec3& Vec3::operator=(Vec3&& other) {
-    // Only swap if ourselvse
-    if (this == &other) {
+    // Only swap if not ourselves
+    if (this != &other) {
         swap(*this, other);
     }
     return *this;
