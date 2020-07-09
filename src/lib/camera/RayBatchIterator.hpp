@@ -4,7 +4,7 @@
  * Created:
  *   09/07/2020, 16:21:18
  * Last edited:
- *   09/07/2020, 17:19:10
+ *   09/07/2020, 18:08:24
  * Auto updated?
  *   Yes
  *
@@ -150,6 +150,9 @@ namespace RayTracer {
         /* Allows (mutable) access to the internal Rays. Note that no out-of-bounds checking is performed, and so undefined behaviour may occur. */
         HOST_DEVICE inline Ray& operator[](size_t n) { return this->rays[n]; }
 
+        /* Returns the Coordinate of the Ray that was cast with given index. */
+        inline Coordinate inflate(size_t n) const { /* TBD */ }
+
         /* Copy assignment operator for the RayBatch class. */
         HOST_DEVICE inline RayBatch& operator=(const RayBatch& other) { return *this = RayBatch(other); }
         /* Move assignment operator for the RayBatch class. */
@@ -162,9 +165,9 @@ namespace RayTracer {
         /* Returns a non-mutable iterator which points to the start of all available Rays. */
         HOST_DEVICE inline const_iterator begin() const { return RayBatch::const_iterator(this); }
         /* Returns a mutable iterator which points beyond the end of all available Rays. */
-        HOST_DEVICE inline iterator end() { return RayBatch::iterator(this, this->width * this->height * this->rays_per_pixel); }
+        HOST_DEVICE inline iterator end() { return RayBatch::iterator(this, this->n_rays); }
         /* Returns a non-mutable iterator which points beyond the end of all available Rays. */
-        HOST_DEVICE inline const_iterator end() const { return RayBatch::const_iterator(this, this->width * this->height * this->rays_per_pixel); }
+        HOST_DEVICE inline const_iterator end() const { return RayBatch::const_iterator(this, this->n_rays); }
     };
 
     /* Swap operator for the RayBatch class. */
@@ -177,6 +180,8 @@ namespace RayTracer {
         Camera& camera;
         /* Number of rays to cast per pixel. */
         size_t n_rays;
+        /* Number of rays per batch. */
+        size_t batch_size;
 
     public:
         /* Iterator of the RayIterator. Note that it only supports non-mutable iterators, as the Rays generated are not, in fact, stored. */
@@ -217,15 +222,15 @@ namespace RayTracer {
             inline RayBatch operator*() const { return (*(this->data))[this->pos]; }
         };
 
-        /* Constructor for the RayIterator class, which simply takes a camera and the number of rays to cast per pixel. */
-        RayBatchIterator(Camera& camera, size_t n_rays);
+        /* Constructor for the RayIterator class, which simply takes a camera and the number of rays to cast per pixel. Finally, the batch size can also be tweaked. */
+        RayBatchIterator(Camera& camera, size_t n_rays, size_t batch_size = 500000);
         /* Copy constructor for the RayIterator class. */
         RayBatchIterator(const RayBatchIterator& other);
         /* Move constructor for the RayIterator class. */
         RayBatchIterator(RayBatchIterator&& other);
 
         /* Generate a RayBatch with given index as seen from all possible rays in the Frame. */
-        RayBatch operator[](size_t n) const;
+        inline RayBatch operator[](size_t n) const { return RayBatch(this->camera, this->n_rays, n, n + this->batch_size); }
 
         /* Copy assignment operator for the RayIterator class. */
         inline RayBatchIterator& operator=(const RayBatchIterator& other) { return *this = RayBatchIterator(other); }

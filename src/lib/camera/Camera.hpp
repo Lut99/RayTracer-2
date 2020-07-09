@@ -4,7 +4,7 @@
  * Created:
  *   08/07/2020, 22:21:48
  * Last edited:
- *   09/07/2020, 15:32:28
+ *   09/07/2020, 17:58:27
  * Auto updated?
  *   Yes
  *
@@ -44,6 +44,9 @@ namespace RayTracer {
         Vec3 horizontal;
         /* The height of the rectangle that will be used to direct the Rays. */
         Vec3 vertical;
+
+        /* Default constructor, used to avoid unnecessary computations. */
+        Camera() {}
 
     public:
         /* The width of the target frame (in pixels). */
@@ -89,7 +92,7 @@ namespace RayTracer {
             size_t frame_height,
             double viewport_width = DEFAULT_ASPECT_RATIO * DEFAULT_VIEWPORT_HEIGHT,
             double viewport_height = DEFAULT_VIEWPORT_HEIGHT,
-            double focal_length = DEFAULT_FOCAL_LENGTH
+            double focal_length = DEFAULT_FOCAL_LENGTH,
             void* ptr = nullptr
         );
         /* CPU-side constructor for a GPU-side Camera class. Takes another Camera object and copies it. If ptr == nullptr, does not allocate but instead only copies to the memory location pionted to. */

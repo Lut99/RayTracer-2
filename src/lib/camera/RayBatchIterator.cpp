@@ -4,7 +4,7 @@
  * Created:
  *   09/07/2020, 16:21:15
  * Last edited:
- *   09/07/2020, 17:25:09
+ *   09/07/2020, 18:04:11
  * Auto updated?
  *   Yes
  *
@@ -294,26 +294,23 @@ RayBatchIterator::const_iterator& RayBatchIterator::const_iterator::operator+=(s
 
 
 /***** RAYBATCH ITERATOR *****/
-RayBatchIterator::RayBatchIterator(Camera& camera, size_t n_rays) :
+RayBatchIterator::RayBatchIterator(Camera& camera, size_t n_rays, size_t batch_size) :
     camera(camera),
-    n_rays(n_rays)
+    n_rays(n_rays),
+    batch_size(batch_size)
 {}
 
 RayBatchIterator::RayBatchIterator(const RayBatchIterator& other) :
     camera(other.camera),
-    n_rays(other.n_rays)
+    n_rays(other.n_rays),
+    batch_size(other.batch_size)
 {}
 
 RayBatchIterator::RayBatchIterator(RayBatchIterator&& other) :
     camera(other.camera),
-    n_rays(other.n_rays)
+    n_rays(other.n_rays),
+    batch_size(other.batch_size)
 {}
-
-
-
-RayBatch RayBatchIterator::operator[](size_t n) const {
-    
-}
 
 
 
@@ -332,4 +329,6 @@ void RayTracer::swap(RayBatchIterator& ri1, RayBatchIterator& ri2) {
     swap(ri1.camera, ri2.camera);
     // Swap the number of rays
     swap(ri1.n_rays, ri2.n_rays);
+    // Swap the batch size
+    swap(ri1.batch_size, ri2.batch_size);
 }

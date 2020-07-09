@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:40:27 PM
  * Last edited:
- *   07/07/2020, 17:32:28
+ *   09/07/2020, 17:56:19
  * Auto updated?
  *   Yes
  *
@@ -150,7 +150,7 @@ bool test_misc() {
     Vec3 test1(1, 2, 3);
 
     // Try some
-    ASSERT(test1.sum() == 6)
+    ASSERT(sum(test1) == 6)
     ASSERT(fabs(test1.length() - 3.74165738677) < 0.000001)
     ASSERT(test1.length_pow2() == 14)
 

@@ -85,13 +85,14 @@ dirs: $(BIN) $(TST_BIN) $(OBJ) $(DIRS)
 
 raytracer: $(BIN)/raytracer.out
 
-tests: $(TST_BIN)/test_vec3.out $(TST_BIN)/test_frame.out $(TST_BIN)/test_ray.out
+tests: $(TST_BIN)/test_vec3.out $(TST_BIN)/test_frame.out $(TST_BIN)/test_ray.out $(TST_BIN)/test_rayiterator.out
 	$(info Running tests...)
 	$(info )
 
 	$(TST_BIN)/test_vec3.out
 	$(TST_BIN)/test_frame.out
 	$(TST_BIN)/test_ray.out
+	$(TST_BIN)/test_rayiterator.out
 
 ### DIRECTORY RULES ###
 $(BIN):
@@ -124,8 +125,14 @@ $(OBJ)/test_%.o: $(TST_SRC)/test_%.cpp | dirs
 $(TST_BIN)/test_vec3.out: $(OBJ)/test_vec3.o $(OBJ)/math/Vec3.o | dirs
 	$(CC) $(CC_ARGS) -o $@ $^ $(EXT_LIBS)
 
-$(TST_BIN)/test_frame.out: $(OBJ)/test_frame.o $(OBJ)/frames/Frame.o $(OBJ)/frames/LodePNG.o | dirs
+$(TST_BIN)/test_frame.out: $(OBJ)/test_frame.o $(OBJ)/frames/Frame.o $(OBJ)/frames/LodePNG.o $(OBJ)/coordinate/Coordinate.o | dirs
 	$(CC) $(CC_ARGS) -o $@ $^ $(EXT_LIBS)
 
 $(TST_BIN)/test_ray.out: $(OBJ)/test_ray.o $(OBJ)/rays/Ray.o $(OBJ)/math/Vec3.o | dirs
+	$(CC) $(CC_ARGS) -o $@ $^ $(EXT_LIBS)
+
+$(TST_BIN)/test_rayiterator.out: $(OBJ)/test_rayiterator.o $(OBJ)/camera/Camera.o $(OBJ)/camera/RayIterator.o $(OBJ)/rays/Ray.o $(OBJ)/math/Vec3.o $(OBJ)/coordinate/Coordinate.o | dirs
+	$(CC) $(CC_ARGS) -o $@ $^ $(EXT_LIBS)
+
+$(TST_BIN)/test_raybatchiterator.out: $(OBJ)/test_raybatchiterator.o $(OBJ)/camera/Camera.o $(OBJ)/camera/RayBatchIterator.o $(OBJ)/rays/Ray.o $(OBJ)/math/Vec3.o $(OBJ)/coordinate/Coordinate.o | dirs
 	$(CC) $(CC_ARGS) -o $@ $^ $(EXT_LIBS)

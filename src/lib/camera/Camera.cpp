@@ -4,7 +4,7 @@
  * Created:
  *   08/07/2020, 22:21:30
  * Last edited:
- *   09/07/2020, 15:37:37
+ *   09/07/2020, 17:58:48
  * Auto updated?
  *   Yes
  *
@@ -81,7 +81,7 @@ Camera Camera::GPU_copy(Camera* ptr_gpu) {
     Camera result;
 
     // Copy from the GPU into it
-    cudaMemcpy((void*) &result, (void*) ptr_gpu, sizeof(Camera, cudaMemcpyDeviceToHost);
+    cudaMemcpy((void*) &result, (void*) ptr_gpu, sizeof(Camera), cudaMemcpyDeviceToHost);
 
     // Return the object
     return result;
@@ -112,7 +112,7 @@ HOST_DEVICE void Camera::recompute() {
 HOST_DEVICE Ray Camera::cast(size_t x, size_t y) const {
     // Cast a ray through the given pixel at x and y
     double s = x / (double) this->frame_width;
-    double t = x / (double) this->frame_width;
+    double t = y / (double) this->frame_height;
     return Ray(this->origin, this->lower_left + s * this->horizontal + t * this->vertical - this->origin);
 }
 

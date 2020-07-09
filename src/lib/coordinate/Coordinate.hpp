@@ -4,7 +4,7 @@
  * Created:
  *   09/07/2020, 16:02:10
  * Last edited:
- *   09/07/2020, 16:03:54
+ *   09/07/2020, 17:54:57
  * Auto updated?
  *   Yes
  *
@@ -15,6 +15,8 @@
 
 #ifndef COORDINATE_HPP
 #define COORDINATE_HPP
+
+#include <cstdlib>
 
 #ifdef CUDA
 #define HOST_DEVICE __host__ __device__
