@@ -4,7 +4,7 @@
  * Created:
  *   7/4/2020, 12:08:25 PM
  * Last edited:
- *   07/07/2020, 17:32:28
+ *   09/07/2020, 15:08:27
  * Auto updated?
  *   Yes
  *
@@ -92,7 +92,7 @@ bool test_png() {
     for (Pixel p : frame) {
         p.r = float(p.x()) / float(w);
         p.g = float((h - 1) - p.y()) / float(h);
-        p.b = 0;
+        p.b = 0.25;
     }
 
     // Write the image
@@ -115,7 +115,7 @@ __global__ void test_kernel(Frame* test1_ptr, Frame* test2_ptr) {
         for (Pixel p : test1) {
             p.r = float(p.x()) / float(test1.width);
             p.g = float((test1.height - 1) - p.y()) / float(test1.height);
-            p.b = 0;
+            p.b = 0.25;
         }
         // Also, darken test2
         for (Pixel p : test2) {
@@ -143,7 +143,7 @@ bool test_values_gpu() {
     for (Pixel p : cpu_test2) {
         p.r = float(p.x()) / float(width);
         p.g = float((height - 1) - p.y()) / float(height);
-        p.b = 0;
+        p.b = 0.25;
     }
 
     // Create a GPU-counterpart
@@ -157,7 +157,7 @@ bool test_values_gpu() {
     for (Pixel p : cpu_test1) {
         p.r = float(p.x()) / float(width);
         p.g = float((height - 1) - p.y()) / float(height);
-        p.b = 0;
+        p.b = 0.25;
     }
     // Also, darken test2
     for (Pixel p : cpu_test2) {
