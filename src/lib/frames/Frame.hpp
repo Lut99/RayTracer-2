@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:24 PM
  * Last edited:
- *   08/07/2020, 14:34:21
+ *   09/07/2020, 16:02:50
  * Auto updated?
  *   Yes
  *
@@ -21,6 +21,8 @@
 #include <ostream>
 #include <string>
 
+#include "Coordinate.hpp"
+
 #ifdef CUDA
 #define HOST_DEVICE __host__ __device__
 #else
@@ -28,20 +30,6 @@
 #endif
 
 namespace RayTracer {
-    /* The Coordinate struct. */
-    struct Coordinate {
-        /* The target x-location. */
-        size_t x;
-        /* The target y-location. */
-        size_t y;
-
-        /* Allows the Coordinate to be swapped. */
-        friend HOST_DEVICE void swap(Coordinate& c1, Coordinate& c2);
-    };
-
-    /* Allows the Coordinate to be swapped. */
-    HOST_DEVICE void swap(Coordinate& c1, Coordinate& c2);
-    
     /* A struct which wraps a Pixel, i.e., three consecutive doubles. */
     class Frame;
     struct Pixel {

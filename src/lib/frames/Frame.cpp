@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:00 PM
  * Last edited:
- *   08/07/2020, 14:34:45
+ *   09/07/2020, 16:04:08
  * Auto updated?
  *   Yes
  *
@@ -34,23 +34,6 @@ double& get_reference(double& d1, double& d2, bool should_be_two) {
         return d2;
     }
     return d1;
-}
-
-
-
-
-
-/***** COORDINATE STRUCT *****/
-
-HOST_DEVICE void RayTracer::swap(Coordinate& c1, Coordinate& c2) {
-    // Swap the x and y
-    double t = c1.x;
-    c1.x = c2.x;
-    c2.x = t;
-
-    t = c1.y;
-    c1.y = c2.y;
-    c2.y = t;
 }
 
 

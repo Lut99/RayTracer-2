@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 2:40:31 PM
  * Last edited:
- *   7/4/2020, 6:05:23 PM
+ *   09/07/2020, 17:25:58
  * Auto updated?
  *   Yes
  *
@@ -18,21 +18,29 @@
 
 #include <type_traits>
 
-namespace Tools {
+#ifdef CUDA
+#define HOST_DEVICE __host__ __device__
+#else
+#define HOST_DEVICE
+#endif
+
+namespace RayTracer {
     /***** SWAP OPERATORS *****/
     /* Swaps two pointers. */
     template <class T, typename = std::enable_if_t<std::is_pointer<T>::value> >
-    __device__ void swap(T& p1, T& p2) {
+    HOST_DEVICE void swap(T& p1, T& p2) {
         T tp = p1;
         p1 = p2;
         p2 = tp;
     }
 
-    /* Swaps two booleans. */
-    __device__ void swap(bool& b1, bool& b2);
-
-    /* Swaps two doubles. */
-    __device__ void swap(double& f1, double& f2);
+    /* Swaps two arithmetic types. */
+    template <class T, typename = std::enable_if_t<std::is_arithmetic<T>::value> >
+    HOST_DEVICE void swap(T& a1, T& a2) {
+        T ta = a1;
+        a1 = a2;
+        a2 = ta;
+    }
 }
 
 #endif
