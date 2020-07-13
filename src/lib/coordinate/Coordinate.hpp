@@ -4,7 +4,7 @@
  * Created:
  *   09/07/2020, 16:02:10
  * Last edited:
- *   09/07/2020, 17:54:57
+ *   13/07/2020, 13:04:02
  * Auto updated?
  *   Yes
  *
@@ -28,9 +28,9 @@ namespace RayTracer {
     /* The Coordinate struct. */
     struct Coordinate {
         /* The target x-location. */
-        size_t x;
+        double x;
         /* The target y-location. */
-        size_t y;
+        double y;
 
         /* Allows the Coordinate to be swapped. */
         friend HOST_DEVICE void swap(Coordinate& c1, Coordinate& c2);
