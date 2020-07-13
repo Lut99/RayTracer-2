@@ -4,7 +4,7 @@
  * Created:
  *   09/07/2020, 16:02:10
  * Last edited:
- *   13/07/2020, 14:35:12
+ *   13/07/2020, 14:56:56
  * Auto updated?
  *   Yes
  *
@@ -14,8 +14,8 @@
  *   only rather than decimals who can also be negative.
 **/
 
-#ifndef PIXELCOORD_HPP
-#define PIXELCOORD_HPP
+#ifndef Point2_HPP
+#define Point2_HPP
 
 #include <cstdlib>
 #include <ostream>
@@ -66,11 +66,19 @@ namespace RayTracer {
         /* Returns true if this Point2 occurs linearly after the given one or equals it. In quick terms, only return true if either a) y is larger or b) the same but x is larger or equal. */
         HOST_DEVICE inline bool operator>=(const Point2& other) const { return this->y > other.y || (this->y == other.y && this->x >= other.x); }
 
+        /* Pre-increment operator for the Point2 class. */
+        HOST_DEVICE Point2& operator++();
+        /* Post-increment operator for the Point2 class. */
+        HOST_DEVICE inline Point2 operator++(int) { return Point2(this->x++, this->y); }
         /* Allows this Point2 to be added to another to return a new one. */
         HOST_DEVICE inline Point2 operator+(const Point2& other) const { return Point2(this->x + other.x, this->y + other.y); }
         /* Allows this Point2 to be added to another and store the result in this Point2. */
         HOST_DEVICE Point2& operator+=(const Point2& other);
 
+        /* Pre-decrement operator for the Point2 class. */
+        HOST_DEVICE Point2& operator--();
+        /* Post-decrement operator for the Point2 class. */
+        HOST_DEVICE inline Point2 operator--(int) { return Point2(this->x--, this->y); }
         /* Allows another Point2 to be subtracted from this one to return a new one. */
         HOST_DEVICE inline Point2 operator-(const Point2& other) const { return Point2(this->x - other.x, this->y - other.y); }
         /* Allows another Point2 to be subtracted from this one and store the result in this Point2. */
@@ -91,8 +99,10 @@ namespace RayTracer {
         /* Allows (mutable) access to the internal coordinates by index. */
         HOST_DEVICE size_t& operator[](size_t index);
 
-        /* Returns a rebalanced Point2 to a grid of the given width to keep the X within bounds and overflow that to the Y. */
-        HOST_DEVICE inline Point2 rebalance(size_t width) const { return Point2(this->x % width, this->y + this->x / width); };
+        /* Realances itself as a new Point2 to a grid of the given width to keep the X within bounds and overflow that to the Y. */
+        HOST_DEVICE inline Point2 balance(size_t width) const { return Point2(this->x % width, this->y + this->x / width); };
+        /* Balances itself to a grid of the given width to keep the X within bounds and overflow that to the Y. */
+        HOST_DEVICE Point2& rebalance(size_t width);
 
         /* Copy assignment operator for the Point2 class. */
         HOST_DEVICE inline Point2& operator=(const Point2& other) { return *this = Point2(other); }

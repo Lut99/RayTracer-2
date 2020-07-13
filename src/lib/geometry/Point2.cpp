@@ -4,7 +4,7 @@
  * Created:
  *   09/07/2020, 16:03:11
  * Last edited:
- *   13/07/2020, 14:30:56
+ *   13/07/2020, 14:57:15
  * Auto updated?
  *   Yes
  *
@@ -135,6 +135,11 @@ void Point2::GPU_free(Point2* ptr_gpu) {
 
 
 
+HOST_DEVICE Point2& Point2::operator++() {
+    ++this->x;
+    return *this;
+}
+
 HOST_DEVICE Point2& Point2::operator+=(const Point2& other) {
     this->x += other.x;
     this->y += other.y;
@@ -142,6 +147,11 @@ HOST_DEVICE Point2& Point2::operator+=(const Point2& other) {
 }
 
 
+
+HOST_DEVICE Point2& Point2::operator--() {
+    --this->x;
+    return *this;
+}
 
 HOST_DEVICE Point2& Point2::operator-=(const Point2& other) {
     this->x -= other.x;
@@ -183,6 +193,14 @@ HOST_DEVICE size_t& Point2::operator[](size_t index) {
     // Else, return x but print a warning
     printf("ERROR: size_t& Point2::operator[](size_t index): Index %lu is out of bounds for Point2 with size 2.\n", index);
     return this->x;
+}
+
+
+
+HOST_DEVICE Point2& Point2::rebalance(size_t width) {
+    this->y += this->x / width;
+    this->x = this->x % width;
+    return *this;
 }
 
 
