@@ -4,7 +4,7 @@
  * Created:
  *   05/07/2020, 17:10:06
  * Last edited:
- *   08/07/2020, 14:40:43
+ *   12/07/2020, 17:03:46
  * Auto updated?
  *   Yes
  *
@@ -19,13 +19,9 @@
 
 #include <ostream>
 
-#include "Vec3.hpp"
+#include "GPUDev.hpp"
 
-#ifdef CUDA
-#define HOST_DEVICE __host__ __device__
-#else
-#define HOST_DEVICE
-#endif
+#include "Vec3.hpp"
 
 namespace RayTracer {
     class Ray {

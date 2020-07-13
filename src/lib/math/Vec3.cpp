@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:09:06 PM
  * Last edited:
- *   08/07/2020, 14:47:47
+ *   12/07/2020, 17:34:15
  * Auto updated?
  *   Yes
  *
@@ -49,6 +49,8 @@ HOST_DEVICE Vec3::Vec3(Vec3&& other) :
 
 #ifdef CUDA
 Vec3* Vec3::GPU_create(void* ptr) {
+    CUDA_DEBUG("Vec3 GPU-default constructor");
+
     // Create a CPU-side template
     Vec3 temp;
 
@@ -56,16 +58,20 @@ Vec3* Vec3::GPU_create(void* ptr) {
     Vec3* ptr_gpu = (Vec3*) ptr;
     if (ptr_gpu == nullptr) {
         cudaMalloc((void**) &ptr_gpu, sizeof(Vec3));
+        CUDA_MALLOC_ASSERT();
     }
 
     // Copy the default vector
     cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Vec3), cudaMemcpyHostToDevice);
+    CUDA_COPYTO_ASSERT();
 
     // Return the pointer
     return ptr_gpu;
 }
 
 Vec3* Vec3::GPU_create(double x, double y, double z, void* ptr) {
+    CUDA_DEBUG("Vec3 GPU-constructor");
+
     // Create a CPU-side template
     Vec3 temp(x, y, z);
 
@@ -73,43 +79,55 @@ Vec3* Vec3::GPU_create(double x, double y, double z, void* ptr) {
     Vec3* ptr_gpu = (Vec3*) ptr;
     if (ptr_gpu == nullptr) {
         cudaMalloc((void**) &ptr_gpu, sizeof(Vec3));
+        CUDA_MALLOC_ASSERT();
     }
 
     // Copy the default vector
     cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Vec3), cudaMemcpyHostToDevice);
+    CUDA_COPYTO_ASSERT();
 
     // Return the pointer
     return ptr_gpu;
 }
 
 Vec3* Vec3::GPU_create(const Vec3& other, void* ptr) {
+    CUDA_DEBUG("Vec3 GPU-copy constructor");
+
     // Allocate new memory if that is needed
     Vec3* ptr_gpu = (Vec3*) ptr;
     if (ptr_gpu == nullptr) {
         cudaMalloc((void**) &ptr_gpu, sizeof(Vec3));
+        CUDA_MALLOC_ASSERT();
     }
 
     // Copy the given vector
     cudaMemcpy((void*) ptr_gpu, (void*) &other, sizeof(Vec3), cudaMemcpyHostToDevice);
+    CUDA_COPYTO_ASSERT();
 
     // Return the pointer
     return ptr_gpu;
 }
 
 Vec3 Vec3::GPU_copy(Vec3* ptr_gpu) {
+    CUDA_DEBUG("Vec3 GPU-copy");
+
     // Create a Vec3 buffer on the CPU
     Vec3 result;
 
     // Copy the GPU-side one into it
     cudaMemcpy((void*) &result, (void*) ptr_gpu, sizeof(Vec3), cudaMemcpyDeviceToHost);
+    CUDA_COPYFROM_ASSERT();
 
     // Return the new Vec as copy of the buffer
     return result;
 }
 
 void Vec3::GPU_free(Vec3* ptr_gpu) {
+    CUDA_DEBUG("Vec3 GPU-destructor");
+
     // Deallocate the given gpu-side pointer
     cudaFree((void*) ptr_gpu);
+    CUDA_FREE_ASSERT();
 }
 #endif
 

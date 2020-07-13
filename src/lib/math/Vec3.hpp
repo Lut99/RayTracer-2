@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:08:07 PM
  * Last edited:
- *   08/07/2020, 22:02:32
+ *   12/07/2020, 17:15:15
  * Auto updated?
  *   Yes
  *
@@ -23,11 +23,7 @@
 #include <ostream>
 #include <cmath>
 
-#ifdef CUDA
-#define HOST_DEVICE __host__ __device__
-#else
-#define HOST_DEVICE
-#endif
+#include "GPUDev.hpp"
 
 namespace RayTracer {
     using ::exp;

@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:00 PM
  * Last edited:
- *   09/07/2020, 16:04:08
+ *   12/07/2020, 17:33:19
  * Auto updated?
  *   Yes
  *
@@ -207,10 +207,13 @@ HOST_DEVICE Frame::~Frame() {
 #ifdef CUDA
 #include <iostream>
 Frame* Frame::GPU_create(size_t width, size_t height, void* ptr) {
+    CUDA_DEBUG("Frame GPU-constructor");
+
     // First, allocate the GPU-side data array
     void* data;
     size_t pitch;
     cudaMallocPitch(&data, &pitch, sizeof(double) * width * 3, height);
+    CUDA_ASSERT("Could not allocate additional data");
 
     // Then, create an empty cpu-side Frame with this pointer as target
     Frame temp(width, height, data, pitch);
@@ -219,23 +222,29 @@ Frame* Frame::GPU_create(size_t width, size_t height, void* ptr) {
     Frame* ptr_gpu = (Frame*) ptr;
     if (ptr_gpu == nullptr) {
         cudaMalloc((void**) &ptr_gpu, sizeof(Frame));
+        CUDA_MALLOC_ASSERT();
     }
 
     // Copy the struct itself
     cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Frame), cudaMemcpyHostToDevice);
+    CUDA_COPYTO_ASSERT();
 
     // Return the pointer
     return ptr_gpu;
 }
 
 Frame* Frame::GPU_create(const Frame& other, void* ptr) {
+    CUDA_DEBUG("Frame GPU-copy constructor");
+
     // First, allocate the GPU-side data array
     void* data;
     size_t pitch;
     cudaMallocPitch(&data, &pitch, sizeof(double) * other.width * 3, other.height);
+    CUDA_ASSERT("Could not allocate additional data");
 
     // Then, copy the CPU-side data to the GPU
     cudaMemcpy2D(data, pitch, other.data, other.pitch, sizeof(double) * other.width * 3, other.height, cudaMemcpyHostToDevice);
+    CUDA_ASSERT("Could not copy additional data to device");
 
     // Then, create an empty frame with the given frame's properties
     Frame temp(other.width, other.height, data, pitch);
@@ -244,21 +253,26 @@ Frame* Frame::GPU_create(const Frame& other, void* ptr) {
     Frame* ptr_gpu = (Frame*) ptr;
     if (ptr_gpu == nullptr) {
         cudaMalloc((void**) &ptr_gpu, sizeof(Frame));
+        CUDA_MALLOC_ASSERT();
     }
 
     // Copy the struct itself
     cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Frame), cudaMemcpyHostToDevice);
+    CUDA_COPYTO_ASSERT();
 
     // Return the pointer
     return ptr_gpu;
 }
 
 Frame Frame::GPU_copy(Frame* ptr_gpu) {
+    CUDA_DEBUG("Frame GPU-copy");
+    
     // Create a CPU-side buffer for the data
     char buffer[sizeof(Frame)];
 
     // Copy the GPU-side frame data into it
     cudaMemcpy((void*) buffer, (void*) ptr_gpu, sizeof(Frame), cudaMemcpyDeviceToHost);
+    CUDA_COPYFROM_ASSERT();
 
     // Extract the Frame
     Frame& result = *((Frame*) buffer);
@@ -267,6 +281,7 @@ Frame Frame::GPU_copy(Frame* ptr_gpu) {
     void* data = (void*) new double[result.width * result.height * 3];
     size_t width = sizeof(double) * result.width * 3;
     cudaMemcpy2D(data, width, result.data, result.pitch, width, result.height, cudaMemcpyDeviceToHost);
+    CUDA_ASSERT("Could not copy additional data to host");
 
     // Swap the pointers in the given struct
     result.data = data;
@@ -278,14 +293,19 @@ Frame Frame::GPU_copy(Frame* ptr_gpu) {
 }
 
 void Frame::GPU_free(Frame* ptr_gpu) {
+    CUDA_DEBUG("Frame GPU-destructor");
+    
     // First, fetch a copy of the Frame to know the data pointer
     char buffer[sizeof(Frame)];
     cudaMemcpy((void*) buffer, (void*) ptr_gpu, sizeof(Frame), cudaMemcpyDeviceToHost);
+    CUDA_COPYFROM_ASSERT();
     Frame& result = *((Frame*) buffer);
 
     // Then, clear both
     cudaFree(result.data);
+    CUDA_ASSERT("Could not free additional data");
     cudaFree(ptr_gpu);
+    CUDA_FREE_ASSERT();
 }
 #endif
 

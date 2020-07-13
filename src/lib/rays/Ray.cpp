@@ -4,7 +4,7 @@
  * Created:
  *   05/07/2020, 17:09:47
  * Last edited:
- *   08/07/2020, 14:43:11
+ *   12/07/2020, 17:34:57
  * Auto updated?
  *   Yes
  *
@@ -46,6 +46,8 @@ HOST_DEVICE Ray::Ray(Ray&& other) :
 
 #ifdef CUDA
 Ray* Ray::GPU_create(void* ptr) {
+    CUDA_DEBUG("Ray GPU-default constructor");
+
     // Create a template Ray to copy
     Ray temp;
 
@@ -53,16 +55,20 @@ Ray* Ray::GPU_create(void* ptr) {
     Ray* ptr_gpu = (Ray*) ptr;
     if (ptr_gpu == nullptr) {
         cudaMalloc((void**) &ptr_gpu, sizeof(Ray));
+        CUDA_MALLOC_ASSERT();
     }
 
     // Copy the Ray object over, which automatically includes any and all vectors
     cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Ray), cudaMemcpyHostToDevice);
+    CUDA_COPYTO_ASSERT();
 
     // Return the pointer
     return ptr_gpu;
 }
 
 Ray* Ray::GPU_create(const Point3& origin, const Vec3& direction, void* ptr) {
+    CUDA_DEBUG("Ray GPU-constructor");
+
     // Create a template Ray to copy
     Ray temp(origin, direction);
 
@@ -70,46 +76,57 @@ Ray* Ray::GPU_create(const Point3& origin, const Vec3& direction, void* ptr) {
     Ray* ptr_gpu = (Ray*) ptr;
     if (ptr_gpu == nullptr) {
         cudaMalloc((void**) &ptr_gpu, sizeof(Ray));
+        CUDA_MALLOC_ASSERT();
     }
 
     // Copy the Ray object over, which automatically includes any and all vectors
     cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Ray), cudaMemcpyHostToDevice);
+    CUDA_COPYTO_ASSERT();
 
     // Return the pointer
     return ptr_gpu;
 }
 
 Ray* Ray::GPU_create(const Ray& other, void* ptr) {
+    CUDA_DEBUG("Ray GPU-copy constructor");
+
     // Create a template Ray to copy
     Ray temp(other);
 
     // If needed, allocate the required space
     Ray* ptr_gpu = (Ray*) ptr;
     if (ptr_gpu == nullptr) {
-        cudaMalloc((void**) &ptr_gpu, sizeof(Ray));
+        CUDA_MALLOC_ASSERT();
     }
 
     // Copy the Ray object over, which automatically includes any and all vectors
     cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(Ray), cudaMemcpyHostToDevice);
+    CUDA_COPYTO_ASSERT();
 
     // Return the pointer
     return ptr_gpu;
 }
 
 Ray Ray::GPU_copy(Ray* ptr_gpu) {
+    CUDA_DEBUG("Ray GPU-copy");
+
     // Allocate a local Ray to copy over
     Ray result;
 
     // Copy the stuff from the given pointer back
     cudaMemcpy((void*) &result, (void*) ptr_gpu, sizeof(Ray), cudaMemcpyDeviceToHost);
+    CUDA_COPYFROM_ASSERT();
 
     // Return the Ray
     return result;
 }
 
 void Ray::GPU_free(Ray* ptr_gpu) {
+    CUDA_DEBUG("Ray GPU-destructor");
+
     // Free the given pointer
     cudaFree(ptr_gpu);
+    CUDA_FREE_ASSERT();
 }
 #endif
 

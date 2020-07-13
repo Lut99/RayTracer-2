@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:24 PM
  * Last edited:
- *   09/07/2020, 16:02:50
+ *   12/07/2020, 17:11:38
  * Auto updated?
  *   Yes
  *
@@ -21,13 +21,10 @@
 #include <ostream>
 #include <string>
 
+#include "GPUDev.hpp"
+
 #include "Coordinate.hpp"
 
-#ifdef CUDA
-#define HOST_DEVICE __host__ __device__
-#else
-#define HOST_DEVICE
-#endif
 
 namespace RayTracer {
     /* A struct which wraps a Pixel, i.e., three consecutive doubles. */
