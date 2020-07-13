@@ -4,7 +4,7 @@
  * Created:
  *   05/07/2020, 17:10:06
  * Last edited:
- *   12/07/2020, 17:03:46
+ *   13/07/2020, 15:28:03
  * Auto updated?
  *   Yes
  *
@@ -19,6 +19,7 @@
 
 #include <ostream>
 
+#include "Point2.hpp"
 #include "GPUDev.hpp"
 
 #include "Vec3.hpp"

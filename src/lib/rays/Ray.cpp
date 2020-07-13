@@ -4,7 +4,7 @@
  * Created:
  *   05/07/2020, 17:09:47
  * Last edited:
- *   12/07/2020, 17:34:57
+ *   13/07/2020, 15:28:24
  * Auto updated?
  *   Yes
  *
@@ -13,6 +13,8 @@
  *   a direction. Additionally, it supports GPU-related activities and
  *   therefore also the ability to use external managed memory.
 **/
+
+#include <climits>
 
 #include "Ray.hpp"
 
@@ -67,7 +69,7 @@ Ray* Ray::GPU_create(void* ptr) {
 }
 
 Ray* Ray::GPU_create(const Point3& origin, const Vec3& direction, void* ptr) {
-    CUDA_DEBUG("Ray GPU-constructor");
+    CUDA_DEBUG("Ray GPU-constructor 1");
 
     // Create a template Ray to copy
     Ray temp(origin, direction);
@@ -96,6 +98,7 @@ Ray* Ray::GPU_create(const Ray& other, void* ptr) {
     // If needed, allocate the required space
     Ray* ptr_gpu = (Ray*) ptr;
     if (ptr_gpu == nullptr) {
+        cudaMalloc((void**) &ptr_gpu, sizeof(Ray));
         CUDA_MALLOC_ASSERT();
     }
 

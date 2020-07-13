@@ -4,7 +4,7 @@
  * Created:
  *   09/07/2020, 17:29:20
  * Last edited:
- *   09/07/2020, 17:52:09
+ *   13/07/2020, 12:45:05
  * Auto updated?
  *   Yes
  *
@@ -32,15 +32,6 @@ using namespace RayTracer;
         cerr << "ERROR: Expression '" TOSTR(EXPR) "' is incorrect." << endl << endl; \
         return false; \
     }
-
-#ifdef CUDA
-#define CUDA_ASSERT(ID) \
-    if (cudaPeekAtLastError() != cudaSuccess) { \
-        cout << "[FAIL]" << endl << endl; \
-        cerr << "ERROR: " TOSTR(ID) ": " << cudaGetErrorString(cudaGetLastError()) << endl << endl; \
-        return false; \
-    }
-#endif
 
 
 bool test_iteration() {

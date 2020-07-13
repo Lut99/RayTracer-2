@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:40:27 PM
  * Last edited:
- *   09/07/2020, 17:56:19
+ *   13/07/2020, 12:45:19
  * Auto updated?
  *   Yes
  *
@@ -30,7 +30,7 @@ using namespace RayTracer;
     }
 
 #ifdef CUDA
-#define CUDA_ASSERT(ID) \
+#define CUDA_TEST_ASSERT(ID) \
     if (cudaPeekAtLastError() != cudaSuccess) { \
         cout << "[FAIL]" << endl << endl; \
         cerr << "ERROR: " TOSTR(ID) ": " << cudaGetErrorString(cudaGetLastError()) << endl << endl; \
@@ -236,7 +236,7 @@ bool test_copy() {
     // Run the kernel
     test_copy_kernel<<<1, 32>>>(test1, test2, test3);
     cudaDeviceSynchronize();
-    CUDA_ASSERT(test_copy_kernel);
+    CUDA_TEST_ASSERT(test_copy_kernel);
 
     // Copy all vectors back to the CPU
     Vec3 result1 = Vec3::GPU_copy(test1);

@@ -4,7 +4,7 @@
  * Created:
  *   09/07/2020, 15:54:05
  * Last edited:
- *   09/07/2020, 16:54:58
+ *   13/07/2020, 14:36:55
  * Auto updated?
  *   Yes
  *
@@ -17,7 +17,6 @@
 #ifndef RAYITERATOR_HPP
 #define RAYITERATOR_HPP
 
-#include "Coordinate.hpp"
 #include "Ray.hpp"
 #include "Camera.hpp"
 
@@ -38,6 +37,8 @@ namespace RayTracer {
             const RayIterator* data;
             /* Current position in the iterator. */
             size_t pos;
+            /* Maximum position that the iterator never surpasses. */
+            size_t max;
 
         public:
             /* Constructor for the const_iterator which starts at the beginning. */
@@ -61,7 +62,7 @@ namespace RayTracer {
             /* Increments the const_iterator to the next position (inplace). */
             const_iterator& operator++();
             /* Increments the const_iterator with n positions (creates new iterator). */
-            inline const_iterator operator+(size_t n) const { return const_iterator(this->data, this->pos + n); }
+            const_iterator operator+(size_t n) const;
             /* Increments the const_iterator with n positions (inplace). */
             const_iterator& operator+=(size_t n);
 
@@ -79,7 +80,7 @@ namespace RayTracer {
         /* Generate a Ray with given index as seen from all possible rays in the Frame. */
         inline Ray operator[](size_t n) const { return this->camera.cast(n % (this->camera.frame_width * this->n_rays), n / (this->camera.frame_width * this->n_rays)); }
         /* Generate a Ray at given coordinate in the Frame. */
-        inline Ray operator[](const Coordinate& coord) const { return this->camera.cast(coord.x, coord.y); }
+        inline Ray operator[](const Point2& coord) const { return this->camera.cast(coord); }
 
         /* Copy assignment operator for the RayIterator class. */
         inline RayIterator& operator=(const RayIterator& other) { return *this = RayIterator(other); }

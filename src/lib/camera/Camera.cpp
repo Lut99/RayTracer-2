@@ -4,7 +4,7 @@
  * Created:
  *   08/07/2020, 22:21:30
  * Last edited:
- *   09/07/2020, 17:58:48
+ *   13/07/2020, 15:29:12
  * Auto updated?
  *   Yes
  *
@@ -16,6 +16,8 @@
  *   Additionally, like a real-life camera, it can be moved around and
  *   rotated.
 **/
+
+#include <iostream>
 
 #include "GPUTools.hpp"
 
@@ -43,6 +45,8 @@ HOST_DEVICE Camera::Camera(Point3 lookfrom, Point3 lookat, Vec3 up, double vfov,
 
 #ifdef CUDA
 Camera* Camera::GPU_create(Point3 lookfrom, Point3 lookat, Vec3 up, double vfov, size_t frame_width, size_t frame_height, double viewport_width, double viewport_height, double focal_length, void* ptr) {
+    CUDA_DEBUG("Camera GPU-constructor");
+    
     // Create a CPU-side Camera template to copy
     Camera temp(lookfrom, lookat, up, vfov, frame_width, frame_height, viewport_width, viewport_height, focal_length);
 
@@ -50,16 +54,20 @@ Camera* Camera::GPU_create(Point3 lookfrom, Point3 lookat, Vec3 up, double vfov,
     Camera* ptr_gpu = (Camera*) ptr;
     if (ptr_gpu == nullptr) {
         cudaMalloc((void**) &ptr_gpu, sizeof(Camera));
+        CUDA_MALLOC_ASSERT();
     }
 
     // Copy the data
     cudaMemcpy((void*) ptr_gpu, &temp, sizeof(Camera), cudaMemcpyHostToDevice);
+    CUDA_COPYTO_ASSERT();
 
     // Return the pointer
     return ptr_gpu;
 }
 
 Camera* Camera::GPU_create(const Camera& other, void* ptr) {
+    CUDA_DEBUG("Camera GPU-copy constructor");
+    
     // Create a CPU-side Camera template to copy
     Camera temp(other);
 
@@ -67,29 +75,37 @@ Camera* Camera::GPU_create(const Camera& other, void* ptr) {
     Camera* ptr_gpu = (Camera*) ptr;
     if (ptr_gpu == nullptr) {
         cudaMalloc((void**) &ptr_gpu, sizeof(Camera));
+        CUDA_MALLOC_ASSERT();
     }
 
     // Copy the data
     cudaMemcpy((void*) ptr_gpu, &temp, sizeof(Camera), cudaMemcpyHostToDevice);
+    CUDA_COPYTO_ASSERT();
 
     // Return the pointer
     return ptr_gpu;
 }
 
 Camera Camera::GPU_copy(Camera* ptr_gpu) {
+    CUDA_DEBUG("Came GPU-copy");
+    
     // Create a CPU-side target memory on the stack
     Camera result;
 
     // Copy from the GPU into it
     cudaMemcpy((void*) &result, (void*) ptr_gpu, sizeof(Camera), cudaMemcpyDeviceToHost);
+    CUDA_COPYFROM_ASSERT();
 
     // Return the object
     return result;
 }
 
 void Camera::GPU_free(Camera* ptr_gpu) {
+    CUDA_DEBUG("Camera GPU-destructor");
+    
     // Call cuda's free
     cudaFree((void*) ptr_gpu);
+    CUDA_FREE_ASSERT();
 }
 #endif
 
@@ -109,10 +125,17 @@ HOST_DEVICE void Camera::recompute() {
 
 
 
-HOST_DEVICE Ray Camera::cast(size_t x, size_t y) const {
+HOST_DEVICE Ray Camera::cast(size_t x, size_t y, bool) const {
     // Cast a ray through the given pixel at x and y
-    double s = x / (double) this->frame_width;
-    double t = y / (double) this->frame_height;
+    double s = x / this->frame_width;
+    double t = y / this->frame_height;
+    return Ray(this->origin, this->lower_left + s * this->horizontal + t * this->vertical - this->origin);
+}
+
+HOST_DEVICE Ray Camera::cast(const Point2& coord, bool) const {
+    // Cast a ray through the given pixel at x and y
+    double s = coord.x / this->frame_width;
+    double t = coord.y / this->frame_height;
     return Ray(this->origin, this->lower_left + s * this->horizontal + t * this->vertical - this->origin);
 }
 

@@ -4,7 +4,7 @@
  * Created:
  *   7/4/2020, 12:08:25 PM
  * Last edited:
- *   09/07/2020, 15:08:27
+ *   13/07/2020, 12:44:38
  * Auto updated?
  *   Yes
  *
@@ -24,7 +24,7 @@ using namespace RayTracer;
 #define TOSTR(S) _TOSTR(S)
 #define _TOSTR(S) #S
 #ifdef CUDA
-#define CUDA_ASSERT(ID) \
+#define CUDA_TEST_ASSERT(ID) \
     if (cudaPeekAtLastError() != cudaSuccess) { \
         cout << "[FAIL]" << endl << endl; \
         cerr << "ERROR: " TOSTR(ID) ": " << cudaGetErrorString(cudaGetLastError()) << endl << endl; \
@@ -168,7 +168,7 @@ bool test_values_gpu() {
 
     // Synchronize with the device, check for errors
     cudaDeviceSynchronize();
-    CUDA_ASSERT(test_kernel);
+    CUDA_TEST_ASSERT(test_kernel);
 
     // Copy the frames back from the GPU and free them over there
     Frame gpu_result1 = Frame::GPU_copy(gpu_test1);

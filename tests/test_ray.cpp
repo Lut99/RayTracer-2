@@ -4,7 +4,7 @@
  * Created:
  *   07/07/2020, 17:15:03
  * Last edited:
- *   08/07/2020, 14:47:58
+ *   13/07/2020, 12:44:46
  * Auto updated?
  *   Yes
  *
@@ -29,7 +29,7 @@ using namespace RayTracer;
         return false; \
     }
 #ifdef CUDA
-#define CUDA_ASSERT(ID) \
+#define CUDA_TEST_ASSERT(ID) \
     if (cudaPeekAtLastError() != cudaSuccess) { \
         cout << "[FAIL]" << endl << endl; \
         cerr << "ERROR: " TOSTR(ID) ": " << cudaGetErrorString(cudaGetLastError()) << endl << endl; \
@@ -65,7 +65,7 @@ bool test_gpu() {
     Point3* result_gpu = Point3::GPU_create();
     test_gpu_kernel<<<1, 32>>>(result_gpu, test1, test2, test3);
     cudaDeviceSynchronize();
-    CUDA_ASSERT(test_gpu_kernel);
+    CUDA_TEST_ASSERT(test_gpu_kernel);
 
     // Copy the results back & free 'em
     Point3 result = Point3::GPU_copy(result_gpu);

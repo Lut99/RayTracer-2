@@ -4,7 +4,7 @@
  * Created:
  *   09/07/2020, 16:21:15
  * Last edited:
- *   09/07/2020, 18:04:11
+ *   13/07/2020, 15:19:49
  * Auto updated?
  *   Yes
  *
@@ -27,25 +27,39 @@ using namespace RayTracer;
 /***** RAY BATCH ITERATOR *****/
 HOST_DEVICE RayBatch::iterator::iterator(RayBatch* data) :
     data(data),
-    pos(0)
+    pos(0),
+    max(this->data->n_rays)
 {}
 
 HOST_DEVICE RayBatch::iterator::iterator(RayBatch* data, size_t pos) :
     data(data),
-    pos(pos)
-{}
+    pos(pos),
+    max(this->data->n_rays)
+{
+    if (this->pos > this->max) {
+        this->pos = this->max;
+    }
+}
 
 
 
 HOST_DEVICE RayBatch::iterator& RayBatch::iterator::operator++() {
     // Increment this pos, return
     this->pos++;
+    if (this->pos > this->max) { this->pos = this->max; }
     return *this;
+}
+
+HOST_DEVICE RayBatch::iterator RayBatch::iterator::operator+(size_t n) const {
+    size_t new_pos = this->pos + n;
+    if (new_pos > this->max) { new_pos = this->max; }
+    return RayBatch::iterator(this->data, new_pos);
 }
 
 HOST_DEVICE RayBatch::iterator& RayBatch::iterator::operator+=(size_t n) {
     // Increment this pos, return
     this->pos += n;
+    if (this->pos > this->max) { this->pos = this->max; }
     return *this;
 }
 
@@ -56,25 +70,39 @@ HOST_DEVICE RayBatch::iterator& RayBatch::iterator::operator+=(size_t n) {
 /***** RAY BATCH CONST ITERATOR *****/
 HOST_DEVICE RayBatch::const_iterator::const_iterator(const RayBatch* data) :
     data(data),
-    pos(0)
+    pos(0),
+    max(this->data->n_rays)
 {}
 
 HOST_DEVICE RayBatch::const_iterator::const_iterator(const RayBatch* data, size_t pos) :
     data(data),
-    pos(pos)
-{}
+    pos(pos),
+    max(this->data->n_rays)
+{
+    if (this->pos > this->max) {
+        this->pos = this->max;
+    }
+}
 
 
 
 HOST_DEVICE RayBatch::const_iterator& RayBatch::const_iterator::operator++() {
     // Increment this pos, return
     this->pos++;
+    if (this->pos > this->max) { this->pos = this->max; }
     return *this;
+}
+
+HOST_DEVICE RayBatch::const_iterator RayBatch::const_iterator::operator+(size_t n) const {
+    size_t new_pos = this->pos + n;
+    if (new_pos > this->max) { new_pos = this->max; }
+    return RayBatch::const_iterator(this->data, new_pos);
 }
 
 HOST_DEVICE RayBatch::const_iterator& RayBatch::const_iterator::operator+=(size_t n) {
     // Increment this pos, return
     this->pos += n;
+    if (this->pos > this->max) { this->pos = this->max; }
     return *this;
 }
 
@@ -97,8 +125,9 @@ HOST_DEVICE RayBatch::RayBatch(const Camera& camera, size_t n_rays, size_t start
     // Populate it with stuff from the camera
     for (size_t i = start; i < stop; i++) {
         // Decode into x & y
-        size_t x = i % (this->width * this->rays_per_pixel);
-        size_t y = i / (this->width * this->rays_per_pixel);
+        size_t r = i / this->rays_per_pixel;
+        size_t x = r % this->width;
+        size_t y = r / this->width;
 
         // Cast the ray
         this->rays[i] = camera.cast(x, y);
@@ -145,67 +174,82 @@ HOST_DEVICE RayBatch::~RayBatch() {
 
 #ifdef CUDA
 RayBatch* RayBatch::GPU_create(const Camera& camera, size_t n_rays, size_t start, size_t stop, void* ptr) {
+    CUDA_DEBUG("RayBatch GPU-constructor");
+
     // Create a template to copy from
-    RayBatch template(camera, n_rays, start, stop);
+    RayBatch temp(camera, n_rays, start, stop);
 
     // Always allocate space for the data & copy
     Ray* data;
-    cudaMalloc((void**) &data, sizeof(Ray) * template.n_rays);
-    cudaMemcpy((void*) data, (void*) template.rays, sizeof(Ray) * template.n_rays, cudaMemcpyHostToDevice);
+    cudaMalloc((void**) &data, sizeof(Ray) * temp.n_rays);
+    CUDA_ASSERT("Could not allocate additional data");
+    cudaMemcpy((void*) data, (void*) temp.rays, sizeof(Ray) * temp.n_rays, cudaMemcpyHostToDevice);
+    CUDA_ASSERT("Could not copy additional data to device");
 
     // Deallocate the struct ptr & replace with this one
-    delete[] template.rays;
-    template.rays = data;
+    delete[] temp.rays;
+    temp.rays = data;
 
     // Only allocate for the struct itself if needed
     RayBatch* ptr_gpu = (RayBatch*) ptr;
     if (ptr_gpu == nullptr) {
         cudaMalloc((void**) &data, sizeof(RayBatch));
+        CUDA_MALLOC_ASSERT();
     }
 
     // Copy both it to the GPU
-    cudaMemcpy((void*) ptr_gpu, (void*) &template, sizeof(RayBatch), cudaMemcpyHostToDevice);
+    cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(RayBatch), cudaMemcpyHostToDevice);
+    CUDA_COPYTO_ASSERT();
 
     // Replace the pointer in the struct with nullptr as we're done with that and don't want it to try and deallocate GPU-stuff.
-    template.rays = nullptr;
+    temp.rays = nullptr;
 
     // Return the pointer
     return ptr_gpu;
 }
 
 RayBatch* RayBatch::GPU_create(const RayBatch& other, void* ptr) {
+    CUDA_DEBUG("RayBatch GPU-copy constructor");
+
     // Create a template to copy from
-    RayBatch template(other);
+    RayBatch temp(other);
 
     // Always allocate space for the data & copy
     Ray* data;
-    cudaMalloc((void**) &data, sizeof(Ray) * template.n_rays);
-    cudaMemcpy((void*) data, (void*) template.rays, sizeof(Ray) * template.n_rays, cudaMemcpyHostToDevice);
+    cudaMalloc((void**) &data, sizeof(Ray) * temp.n_rays);
+    CUDA_ASSERT("Could not allocate additional data");
+    cudaMemcpy((void*) data, (void*) temp.rays, sizeof(Ray) * temp.n_rays, cudaMemcpyHostToDevice);
+    CUDA_ASSERT("Could not copy additional data to device");
 
     // Deallocate the struct ptr & replace with this one
-    delete[] template.rays;
-    template.rays = data;
+    delete[] temp.rays;
+    temp.rays = data;
 
     // Only allocate for the struct itself if needed
     RayBatch* ptr_gpu = (RayBatch*) ptr;
     if (ptr_gpu == nullptr) {
-        cudaMalloc((void**) &data, sizeof(RayBatch));
+        cudaMalloc((void**) &ptr_gpu, sizeof(RayBatch));
+        CUDA_MALLOC_ASSERT();
     }
 
     // Copy both it to the GPU
-    cudaMemcpy((void*) ptr_gpu, (void*) &template, sizeof(RayBatch), cudaMemcpyHostToDevice);
+    cudaMemcpy((void*) ptr_gpu, (void*) &temp, sizeof(RayBatch), cudaMemcpyHostToDevice);
+    CUDA_COPYTO_ASSERT();
 
     // Replace the pointer in the struct with nullptr as we're done with that and don't want it to try and deallocate GPU-stuff.
-    template.rays = nullptr;
+    temp.rays = nullptr;
 
     // Return the pointer
     return ptr_gpu;
 }
 
 RayBatch RayBatch::GPU_copy(RayBatch* ptr_gpu) {
+    CUDA_DEBUG("RayBatch GPU-copy");
+    
     // Copy the given RayBatch object into a buffer
     char buffer[sizeof(RayBatch)];
     cudaMemcpy((void*) buffer, (void*) ptr_gpu, sizeof(RayBatch), cudaMemcpyDeviceToHost);
+    CUDA_COPYFROM_ASSERT();
 
     // Read the buffer as RayBatch
     RayBatch& result = *((RayBatch*) buffer);
@@ -215,6 +259,7 @@ RayBatch RayBatch::GPU_copy(RayBatch* ptr_gpu) {
 
     // Copy the GPU-side rays list into it
     cudaMemcpy((void*) rays, (void*) result.rays, sizeof(Ray) * result.n_rays, cudaMemcpyDeviceToHost);
+    CUDA_ASSERT("Could not copy additional data to host");
 
     // Link it to the resulting batch
     result.rays = rays;
@@ -224,17 +269,22 @@ RayBatch RayBatch::GPU_copy(RayBatch* ptr_gpu) {
 }
 
 void RayBatch::GPU_free(RayBatch* ptr_gpu) {
+    CUDA_DEBUG("RayBatch GPU-destructor");
+    
     // Copy the given RayBatch object into a buffer
     char buffer[sizeof(RayBatch)];
     cudaMemcpy((void*) buffer, (void*) ptr_gpu, sizeof(RayBatch), cudaMemcpyDeviceToHost);
+    CUDA_COPYFROM_ASSERT();
 
     // Read the buffer as RayBatch
     RayBatch& result = *((RayBatch*) buffer);
 
     // Deallocate the Rays list
     cudaFree(result.rays);
+    CUDA_ASSERT("Could not free additional data");
     // Deallocate the RayBatch struct itself
     cudaFree(ptr_gpu);
+    CUDA_FREE_ASSERT();
 }
 
 #endif
@@ -267,25 +317,40 @@ HOST_DEVICE void RayTracer::swap(RayBatch& rb1, RayBatch& rb2) {
 /***** RAYBATCH ITERATOR CONST ITERATOR *****/
 RayBatchIterator::const_iterator::const_iterator(const RayBatchIterator* data) :
     data(data),
-    pos(0)
+    pos(0),
+    max(this->data->camera.frame_width * this->data->camera.frame_height * this->data->n_rays / this->data->batch_size)
 {}
 
 RayBatchIterator::const_iterator::const_iterator(const RayBatchIterator* data, size_t pos) :
     data(data),
-    pos(pos)
-{}
+    pos(pos),
+    max(this->data->camera.frame_width * this->data->camera.frame_height * this->data->n_rays / this->data->batch_size)
+{
+    // Make sure it never surpasses the end
+    if (this->pos > this->max) {
+        this->pos = this->max;
+    }
+}
 
 
 
 RayBatchIterator::const_iterator& RayBatchIterator::const_iterator::operator++() {
-    // Increment this pos, return
+    // Increment this pos bounded, return
     this->pos++;
+    if (this->pos > this->max) { this->pos = this->max; }
     return *this;
+}
+
+RayBatchIterator::const_iterator RayBatchIterator::const_iterator::operator+(size_t n) const {
+    size_t new_pos = this->pos + n;
+    if (new_pos > this->max) { new_pos = this->max; }
+    return RayBatchIterator::const_iterator(this->data, new_pos);
 }
 
 RayBatchIterator::const_iterator& RayBatchIterator::const_iterator::operator+=(size_t n) {
     // Increment this pos, return
     this->pos += n;
+    if (this->pos > this->max) { this->pos = this->max; }
     return *this;
 }
 
@@ -311,6 +376,27 @@ RayBatchIterator::RayBatchIterator(RayBatchIterator&& other) :
     n_rays(other.n_rays),
     batch_size(other.batch_size)
 {}
+
+
+
+RayBatch RayBatchIterator::operator[](size_t n) const {
+    size_t max = this->camera.frame_width * this->camera.frame_height * this->n_rays;
+    
+    // Get n1, or otherwise the n pointing after the last element if n is larger
+    size_t n1 = n * this->batch_size;
+    if (n1 > max) {
+        n1 = max;
+    }
+
+    // Get n2, and bound it as well
+    size_t n2 = n1 + this->batch_size;
+    if (n2 > max) {
+        n2 = max;
+    }
+
+    // Return a RayBatch with appropriate dimensions
+    return RayBatch(this->camera, this->n_rays, n1, n2);
+}
 
 
 

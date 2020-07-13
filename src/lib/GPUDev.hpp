@@ -4,7 +4,7 @@
  * Created:
  *   12/07/2020, 16:50:58
  * Last edited:
- *   12/07/2020, 17:39:23
+ *   13/07/2020, 15:13:49
  * Auto updated?
  *   Yes
  *
@@ -26,6 +26,7 @@
 
 #ifdef DEBUG
 #include <iostream>
+#include <cstdio>
 
 /***** DEBUG ENVIRONMENT (when enabled) *****/
 

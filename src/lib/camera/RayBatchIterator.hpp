@@ -4,7 +4,7 @@
  * Created:
  *   09/07/2020, 16:21:18
  * Last edited:
- *   09/07/2020, 18:08:24
+ *   13/07/2020, 15:27:46
  * Auto updated?
  *   Yes
  *
@@ -19,9 +19,10 @@
 #ifndef RAYBATCHITERATOR_HPP
 #define RAYBATCHITERATOR_HPP
 
-#include "Coordinate.hpp"
 #include "Ray.hpp"
 #include "Camera.hpp"
+
+#include <iostream>
 
 #ifdef CUDA
 #define HOST_DEVICE __host__ __device__
@@ -56,6 +57,8 @@ namespace RayTracer {
             RayBatch* data;
             /* The current position in the iterator. */
             size_t pos;
+            /* Maximum position that the iterator never surpasses. */
+            size_t max;
         
         public:
             /* Constructor for the iterator class, which takes the to-be-iterated-over Raybatch object and returns an iterator at the beginning. */
@@ -79,7 +82,7 @@ namespace RayTracer {
             /* Increments the const_iterator to the next position (inplace). */
             HOST_DEVICE iterator& operator++();
             /* Increments the const_iterator with n positions (creates new iterator). */
-            HOST_DEVICE inline iterator operator+(size_t n) const { return iterator(this->data, this->pos + n); }
+            HOST_DEVICE iterator operator+(size_t n) const;
             /* Increments the const_iterator with n positions (inplace). */
             HOST_DEVICE iterator& operator+=(size_t n);
 
@@ -94,6 +97,8 @@ namespace RayTracer {
             const RayBatch* data;
             /* The current position in the iterator. */
             size_t pos;
+            /* Maximum position that the iterator never surpasses. */
+            size_t max;
         
         public:
             /* Constructor for the const_iterator class, which takes the to-be-iterated-over Raybatch object and returns an iterator at the beginning. */
@@ -117,7 +122,7 @@ namespace RayTracer {
             /* Increments the const_iterator to the next position (inplace). */
             HOST_DEVICE const_iterator& operator++();
             /* Increments the const_iterator with n positions (creates new iterator). */
-            HOST_DEVICE inline const_iterator operator+(size_t n) const { return const_iterator(this->data, this->pos + n); }
+            HOST_DEVICE const_iterator operator+(size_t n) const;
             /* Increments the const_iterator with n positions (inplace). */
             HOST_DEVICE const_iterator& operator+=(size_t n);
 
@@ -149,9 +154,6 @@ namespace RayTracer {
         HOST_DEVICE inline Ray operator[](size_t n) const { return this->rays[n]; }
         /* Allows (mutable) access to the internal Rays. Note that no out-of-bounds checking is performed, and so undefined behaviour may occur. */
         HOST_DEVICE inline Ray& operator[](size_t n) { return this->rays[n]; }
-
-        /* Returns the Coordinate of the Ray that was cast with given index. */
-        inline Coordinate inflate(size_t n) const { /* TBD */ }
 
         /* Copy assignment operator for the RayBatch class. */
         HOST_DEVICE inline RayBatch& operator=(const RayBatch& other) { return *this = RayBatch(other); }
@@ -191,6 +193,8 @@ namespace RayTracer {
             const RayBatchIterator* data;
             /* Current position in the iterator. */
             size_t pos;
+            /* Maximum position that the iterator never surpasses. */
+            size_t max;
 
         public:
             /* Constructor for the const_iterator which starts at the beginning. */
@@ -214,7 +218,7 @@ namespace RayTracer {
             /* Increments the const_iterator to the next position (inplace). */
             const_iterator& operator++();
             /* Increments the const_iterator with n positions (creates new iterator). */
-            inline const_iterator operator+(size_t n) const { return const_iterator(this->data, this->pos + n); }
+            const_iterator operator+(size_t n) const;
             /* Increments the const_iterator with n positions (inplace). */
             const_iterator& operator+=(size_t n);
 
@@ -230,7 +234,7 @@ namespace RayTracer {
         RayBatchIterator(RayBatchIterator&& other);
 
         /* Generate a RayBatch with given index as seen from all possible rays in the Frame. */
-        inline RayBatch operator[](size_t n) const { return RayBatch(this->camera, this->n_rays, n, n + this->batch_size); }
+        RayBatch operator[](size_t n) const;
 
         /* Copy assignment operator for the RayIterator class. */
         inline RayBatchIterator& operator=(const RayBatchIterator& other) { return *this = RayBatchIterator(other); }

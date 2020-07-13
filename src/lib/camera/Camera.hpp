@@ -4,7 +4,7 @@
  * Created:
  *   08/07/2020, 22:21:48
  * Last edited:
- *   09/07/2020, 17:58:27
+ *   13/07/2020, 14:37:17
  * Auto updated?
  *   Yes
  *
@@ -22,12 +22,8 @@
 
 #include "Vec3.hpp"
 #include "Ray.hpp"
-
-#ifdef CUDA
-#define HOST_DEVICE __host__ __device__
-#else
-#define HOST_DEVICE
-#endif
+#include "Point2.hpp"
+#include "GPUDev.hpp"
 
 #define DEFAULT_ASPECT_RATIO 16 / 10
 #define DEFAULT_VIEWPORT_HEIGHT 2.0
@@ -106,8 +102,10 @@ namespace RayTracer {
         /* Re-computes the Camera class based on the origin, target, up and vfov that is stored in the class. */
         HOST_DEVICE void recompute();
 
-        /* Casts a single ray on the given index (with a random offset). */
-        HOST_DEVICE Ray cast(size_t x, size_t y) const;
+        /* Casts a single ray on the given index. If offset = true, applies a slight, random offset to each ray for antialiasing purposes. */
+        HOST_DEVICE Ray cast(size_t x, size_t y, bool offset = true) const;
+        /* Casts a single ray on the given index, except using a full struct. If offset = true, applies a slight, random offset to each ray for antialiasing purposes. */
+        HOST_DEVICE Ray cast(const Point2& coord, bool offset = true) const;
 
         /* Swap operator for the Camera class. */
         friend HOST_DEVICE void swap(Camera& c1, Camera& c2);

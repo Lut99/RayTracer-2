@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:00 PM
  * Last edited:
- *   13/07/2020, 13:38:53
+ *   13/07/2020, 14:36:55
  * Auto updated?
  *   Yes
  *
@@ -42,7 +42,7 @@ double& get_reference(double& d1, double& d2, bool should_be_two) {
 
 /***** PIXEL CLASS *****/
 
-HOST_DEVICE Pixel::Pixel(const PixelCoord& pos, double* const data) :
+HOST_DEVICE Pixel::Pixel(const Point2& pos, double* const data) :
     data(data),
     is_external(true),
     frame_pos(pos),
@@ -305,13 +305,13 @@ void Frame::GPU_free(Frame* ptr_gpu) {
 
 
 
-HOST_DEVICE const Pixel Frame::operator[](const PixelCoord& index) const {
+HOST_DEVICE const Pixel Frame::operator[](const Point2& index) const {
     // Check if within bounds
     if (index.x >= this->width) {
-        printf("ERROR: const Pixel Frame::operator[](const PixelCoord& index) const: X-axis index %lu is out of range for Frame of %lu by %lu.\n", index.x, this->width, this->height);
+        printf("ERROR: const Pixel Frame::operator[](const Point2& index) const: X-axis index %lu is out of range for Frame of %lu by %lu.\n", index.x, this->width, this->height);
     }
     if (index.y >= this->height) {
-        printf("ERROR: const Pixel Frame::operator[](const PixelCoord& index) const: Y-axis index %lu is out of range for Frame of %lu by %lu.\n", index.y, this->width, this->height);
+        printf("ERROR: const Pixel Frame::operator[](const Point2& index) const: Y-axis index %lu is out of range for Frame of %lu by %lu.\n", index.y, this->width, this->height);
     }
 
     // Return the correct index Pixel
@@ -319,13 +319,13 @@ HOST_DEVICE const Pixel Frame::operator[](const PixelCoord& index) const {
     return Pixel(index, ptr);
 }
 
-HOST_DEVICE Pixel Frame::operator[](const PixelCoord& index) {
+HOST_DEVICE Pixel Frame::operator[](const Point2& index) {
     // Check if within bounds
     if (index.x >= this->width) {
-        printf("ERROR: Pixel Frame::operator[](const PixelCoord& index): X-axis index %lu is out of range for Frame of %lu by %lu.\n", index.x, this->width, this->height);
+        printf("ERROR: Pixel Frame::operator[](const Point2& index): X-axis index %lu is out of range for Frame of %lu by %lu.\n", index.x, this->width, this->height);
     }
     if (index.y >= this->height) {
-        printf("ERROR: Pixel Frame::operator[](const PixelCoord& index): Y-axis index %lu is out of range for Frame of %lu by %lu.\n", index.y, this->width, this->height);
+        printf("ERROR: Pixel Frame::operator[](const Point2& index): Y-axis index %lu is out of range for Frame of %lu by %lu.\n", index.y, this->width, this->height);
     }
 
     // Return the correct index Pixel
@@ -402,7 +402,7 @@ HOST_DEVICE Frame::iterator::iterator(Frame* frame) :
     max(0, this->data->height)
 {}
 
-HOST_DEVICE Frame::iterator::iterator(Frame* frame, const PixelCoord& pos) :
+HOST_DEVICE Frame::iterator::iterator(Frame* frame, const Point2& pos) :
     data(frame),
     pos(pos),
     max(0, this->data->height)
@@ -425,7 +425,7 @@ HOST_DEVICE Frame::iterator& Frame::iterator::operator++() {
 }
 
 HOST_DEVICE Frame::iterator Frame::iterator::operator+(size_t n) const {
-    PixelCoord new_pos(this->pos.x + n, this->pos.y);
+    Point2 new_pos(this->pos.x + n, this->pos.y);
     new_pos.y += new_pos.x / this->data->width;
     new_pos.x = new_pos.x % this->data->width;
     if (new_pos > this->max) {
@@ -434,8 +434,8 @@ HOST_DEVICE Frame::iterator Frame::iterator::operator+(size_t n) const {
     return Frame::iterator(this->data, new_pos);
 }
 
-HOST_DEVICE Frame::iterator Frame::iterator::operator+(const PixelCoord& n) const {
-    PixelCoord new_pos = this->pos + n;
+HOST_DEVICE Frame::iterator Frame::iterator::operator+(const Point2& n) const {
+    Point2 new_pos = this->pos + n;
     new_pos.y += new_pos.x / this->data->width;
     new_pos.x = new_pos.x % this->data->width;
     if (new_pos > this->max) {
@@ -454,7 +454,7 @@ HOST_DEVICE Frame::iterator& Frame::iterator::operator+=(size_t n) {
     return *this;
 }
 
-HOST_DEVICE Frame::iterator& Frame::iterator::operator+=(const PixelCoord& n) {
+HOST_DEVICE Frame::iterator& Frame::iterator::operator+=(const Point2& n) {
     this->pos += n;
     this->pos.y += this->pos.x / this->data->width;
     this->pos.x = this->pos.x % this->data->width;
@@ -476,7 +476,7 @@ HOST_DEVICE Frame::const_iterator::const_iterator(const Frame* frame) :
     max(0, this->data->height)
 {}
 
-HOST_DEVICE Frame::const_iterator::const_iterator(const Frame* frame, const PixelCoord& pos) :
+HOST_DEVICE Frame::const_iterator::const_iterator(const Frame* frame, const Point2& pos) :
     data(frame),
     pos(pos),
     max(0, this->data->height)
@@ -500,7 +500,7 @@ HOST_DEVICE Frame::const_iterator& Frame::const_iterator::operator++() {
 }
 
 HOST_DEVICE Frame::const_iterator Frame::const_iterator::operator+(size_t n) const {
-    PixelCoord new_pos(this->pos.x + n, this->pos.y);
+    Point2 new_pos(this->pos.x + n, this->pos.y);
     new_pos.y += new_pos.x / this->data->width;
     new_pos.x = new_pos.x % this->data->width;
     if (new_pos > this->max) {
@@ -509,8 +509,8 @@ HOST_DEVICE Frame::const_iterator Frame::const_iterator::operator+(size_t n) con
     return Frame::const_iterator(this->data, new_pos);
 }
 
-HOST_DEVICE Frame::const_iterator Frame::const_iterator::operator+(const PixelCoord& n) const {
-    PixelCoord new_pos = this->pos + n;
+HOST_DEVICE Frame::const_iterator Frame::const_iterator::operator+(const Point2& n) const {
+    Point2 new_pos = this->pos + n;
     new_pos.y += new_pos.x / this->data->width;
     new_pos.x = new_pos.x % this->data->width;
     if (new_pos > this->max) {
@@ -529,7 +529,7 @@ HOST_DEVICE Frame::const_iterator& Frame::const_iterator::operator+=(size_t n) {
     return *this;
 }
 
-HOST_DEVICE Frame::const_iterator& Frame::const_iterator::operator+=(const PixelCoord& n) {
+HOST_DEVICE Frame::const_iterator& Frame::const_iterator::operator+=(const Point2& n) {
     this->pos += n;
     this->pos.y += this->pos.x / this->data->width;
     this->pos.x = this->pos.x % this->data->width;
