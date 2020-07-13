@@ -4,7 +4,7 @@
  * Created:
  *   7/4/2020, 12:08:25 PM
  * Last edited:
- *   13/07/2020, 12:44:38
+ *   13/07/2020, 16:39:20
  * Auto updated?
  *   Yes
  *
@@ -33,8 +33,6 @@ using namespace RayTracer;
 #endif
 
 bool test_values() {
-    cout << "   Testing values of Frame class...    " << flush;
-
     // Create the values
     double values[50][100][3];
     for (int y = 0; y < 50; y++) {
@@ -80,8 +78,6 @@ bool test_values() {
 }
 
 bool test_png() {
-    cout << "   Writing test Frame...               " << flush;
-
     size_t w, h;
     w = 200;
     h = 100;
@@ -129,8 +125,6 @@ __global__ void test_kernel(Frame* test1_ptr, Frame* test2_ptr) {
 }
 
 bool test_values_gpu() {
-    cout << "   Testing CPU / GPU portability...    " << flush;
-
     size_t width = 1920;
     size_t height = 1200;
 
@@ -205,10 +199,17 @@ bool test_values_gpu() {
 
 
 int main() {
+    cout << "   Testing values of Frame class...           " << flush;
     test_values();
+
+    cout << "   Writing test Frame...                      " << flush;
     test_png();
+
+    cout << "   Testing CPU / GPU portability...           " << flush;
     #ifdef CUDA
     test_values_gpu();
+    #else
+    cout << "[SKIP]" << endl;
     #endif
 
     cout << "Done." << endl << endl;

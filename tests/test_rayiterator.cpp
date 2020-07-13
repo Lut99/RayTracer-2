@@ -4,7 +4,7 @@
  * Created:
  *   09/07/2020, 17:29:20
  * Last edited:
- *   13/07/2020, 12:45:05
+ *   13/07/2020, 16:43:31
  * Auto updated?
  *   Yes
  *
@@ -35,8 +35,6 @@ using namespace RayTracer;
 
 
 bool test_iteration() {
-    cout << "   Testing iteration correctness...    " << flush;
-
     // Create an example camera
     Camera cam(Point3(1, 2, 3), Point3(4, 5, 6), Vec3(0, 1, 0), 90, 500, 250);
 
@@ -62,6 +60,7 @@ bool test_iteration() {
 
 
 int main() {
+    cout << "   Testing iteration correctness...           " << flush;
     test_iteration();
 
     cout << "Done." << endl << endl;

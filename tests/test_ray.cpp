@@ -4,7 +4,7 @@
  * Created:
  *   07/07/2020, 17:15:03
  * Last edited:
- *   13/07/2020, 12:44:46
+ *   13/07/2020, 16:42:03
  * Auto updated?
  *   Yes
  *
@@ -51,8 +51,6 @@ __global__ void test_gpu_kernel(Point3* result, Ray* test1_ptr, Ray* test2_ptr, 
 }
 
 bool test_gpu() {
-    cout << "   Testing CPU / GPU portability...    " << flush;
-
     // Create a default GPU-Ray
     Ray* test1 = Ray::GPU_create();
     // Create a default ray with custom vectors
@@ -93,8 +91,11 @@ bool test_gpu() {
 
 
 int main() {
+    cout << "   Testing CPU / GPU portability...           " << flush;
     #ifdef CUDA
     test_gpu();
+    #else
+    cout << "[SKIP]" << endl;
     #endif
     
     cout << "Done." << endl << endl;

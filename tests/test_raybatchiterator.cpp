@@ -4,7 +4,7 @@
  * Created:
  *   09/07/2020, 17:59:37
  * Last edited:
- *   13/07/2020, 15:27:31
+ *   13/07/2020, 16:43:40
  * Auto updated?
  *   Yes
  *
@@ -37,8 +37,6 @@ using namespace RayTracer;
 
 
 bool test_iteration() {
-    cout << "   Testing iteration correctness...    " << flush;
-
     // Create an example camera
     Camera cam(Point3(1, 2, 3), Point3(4, 5, 6), Vec3(0, 1, 0), 90, 500, 250);
 
@@ -104,8 +102,6 @@ __global__ void test_gpu_kernel(bool* success_ptr, Camera* cam_ptr, RayBatch* ba
 
 
 bool test_gpu() {
-    cout << "   Testing CPU / GPU portability...    " << flush;
-    
     // Create an example camera
     Camera cam(Point3(1, 2, 3), Point3(4, 5, 6), Vec3(0, 1, 0), 90, 500, 250);
 
@@ -168,9 +164,14 @@ bool test_gpu() {
 
 
 int main() {
-    // test_iteration();
+    cout << "   Testing iteration correctness...           " << flush;
+    test_iteration();
+
+    cout << "   Testing CPU / GPU portability...           " << flush;
     #ifdef CUDA
     test_gpu();
+    #else
+    cout << "[SKIP]" << endl;
     #endif
 
     cout << "Done." << endl << endl;

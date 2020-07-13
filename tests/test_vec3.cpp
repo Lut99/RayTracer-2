@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 5:40:27 PM
  * Last edited:
- *   13/07/2020, 12:45:19
+ *   13/07/2020, 16:47:07
  * Auto updated?
  *   Yes
  *
@@ -40,8 +40,6 @@ using namespace RayTracer;
 
 
 bool test_equal() {
-    cout << "   Testing equality functions...       " << flush;
-
     // Create a couply to try
     Vec3 test1(1, 2, 3);
     Vec3 test2(1, 2, 3);
@@ -63,8 +61,6 @@ bool test_equal() {
 }
 
 bool test_sum() {
-    cout << "   Testing addition...                 " << flush;
-
     // Create a couply to try
     Vec3 test1(1, 2, 3);
     Vec3 test2(4, 5, 6);
@@ -83,8 +79,6 @@ bool test_sum() {
 }
 
 bool test_sub() {
-    cout << "   Testing subtraction...              " << flush;
-
     // Create a couply to try
     Vec3 test1(1, 2, 3);
     Vec3 test2(4, 5, 6);
@@ -104,8 +98,6 @@ bool test_sub() {
 }
 
 bool test_mul() {
-    cout << "   Testing multiplication...           " << flush;
-
     // Create a couply to try
     Vec3 test1(1, 2, 3);
     Vec3 test2(4, 5, 6);
@@ -124,8 +116,6 @@ bool test_mul() {
 }
 
 bool test_div() {
-    cout << "   Testing dividation...               " << flush;
-
     // Create a couply to try
     Vec3 test1(1, 2, 3);
     Vec3 test2(4, 5, 6);
@@ -144,8 +134,6 @@ bool test_div() {
 }
 
 bool test_misc() {
-    cout << "   Testing miscellaneous operations... " << flush;
-
     // Create a couply to try
     Vec3 test1(1, 2, 3);
 
@@ -159,8 +147,6 @@ bool test_misc() {
 }
 
 bool test_access() {
-    cout << "   Testing access operations...        " << flush;
-
     // Create a couply to try
     Vec3 test1(1, 2, 3);
 
@@ -180,8 +166,6 @@ bool test_access() {
 }
 
 bool test_math() {
-    cout << "   Testing math operations...          " << flush;
-
     // Create a couply to try
     Vec3 test1(1, 2, 3);
 
@@ -221,8 +205,6 @@ __global__ void test_copy_kernel(Vec3* test1_ptr, Vec3* test2_ptr, Vec3* test3_p
 }
 
 bool test_copy() {
-    cout << "   Testing CPU / GPU portability...    " << flush;
-
     // Create an empty GPU vector.
     Vec3* test1 = Vec3::GPU_create();
 
@@ -260,16 +242,35 @@ bool test_copy() {
 
 
 int main() {
+    cout << "   Testing equality functions...              " << flush;
     test_equal();
+    
+    cout << "   Testing addition...                        " << flush;
     test_sum();
+    
+    cout << "   Testing subtraction...                     " << flush;
     test_sub();
+    
+    cout << "   Testing multiplication...                  " << flush;
     test_mul();
+    
+    cout << "   Testing dividation...                      " << flush;
     test_div();
+    
+    cout << "   Testing miscellaneous operations...        " << flush;
     test_misc();
+    
+    cout << "   Testing access operations...               " << flush;
     test_access();
+    
+    cout << "   Testing math operations...                 " << flush;
     test_math();
+    
+    cout << "   Testing CPU / GPU portability...           " << flush;
     #ifdef CUDA
     test_copy();
+    #else
+    cout << "[SKIP]" << endl;
     #endif
 
     cout << "Done." << endl << endl;

@@ -4,7 +4,7 @@
  * Created:
  *   13/07/2020, 14:15:26
  * Last edited:
- *   13/07/2020, 14:57:58
+ *   13/07/2020, 16:41:30
  * Auto updated?
  *   Yes
  *
@@ -39,8 +39,6 @@ using namespace RayTracer;
 
 
 bool test_equal() {
-    cout << "   Testing equality functions...       " << flush;
-
     // Create a couply to try
     Point2 test1(1, 2);
     Point2 test2(1, 2);
@@ -63,8 +61,6 @@ bool test_equal() {
 }
 
 bool test_sum() {
-    cout << "   Testing addition...                 " << flush;
-
     // Create a couply to try
     Point2 test1(1, 2);
     Point2 test2(3, 4);
@@ -82,8 +78,6 @@ bool test_sum() {
 }
 
 bool test_sub() {
-    cout << "   Testing subtraction...              " << flush;
-
     // Create a couply to try
     Point2 test1(1, 2);
     Point2 test2(3, 4);
@@ -101,8 +95,6 @@ bool test_sub() {
 }
 
 bool test_mul() {
-    cout << "   Testing multiplication...           " << flush;
-
     // Create a couply to try
     Point2 test1(1, 2);
     Point2 test2(3, 4);
@@ -117,8 +109,6 @@ bool test_mul() {
 }
 
 bool test_div() {
-    cout << "   Testing dividation...               " << flush;
-
     // Create a couply to try
     Point2 test1(1, 2);
     Point2 test2(3, 4);
@@ -133,8 +123,6 @@ bool test_div() {
 }
 
 bool test_misc() {
-    cout << "   Testing miscellaneous operations... " << flush;
-
     // Create a couply to try
     Point2 test1(1000, 0);
 
@@ -148,8 +136,6 @@ bool test_misc() {
 }
 
 bool test_access() {
-    cout << "   Testing access operations...        " << flush;
-
     // Create a couply to try
     Point2 test1(1, 2);
 
@@ -185,8 +171,6 @@ __global__ void test_copy_kernel(Point2* test1_ptr, Point2* test2_ptr, Point2* t
 }
 
 bool test_copy() {
-    cout << "   Testing CPU / GPU portability...    " << flush;
-
     // Create an empty GPU vector.
     Point2* test1 = Point2::GPU_create();
 
@@ -224,15 +208,32 @@ bool test_copy() {
 
 
 int main() {
+    cout << "   Testing equality functions...              " << flush;
     test_equal();
+
+    cout << "   Testing addition...                        " << flush;
     test_sum();
+
+    cout << "   Testing subtraction...                     " << flush;
     test_sub();
+
+    cout << "   Testing multiplication...                  " << flush;
     test_mul();
+
+    cout << "   Testing dividation...                      " << flush;
     test_div();
+
+    cout << "   Testing miscellaneous operations...        " << flush;
     test_misc();
+
+    cout << "   Testing access operations...               " << flush;
     test_access();
+    
+    cout << "   Testing CPU / GPU portability...           " << flush;
     #ifdef CUDA
     test_copy();
+    #else
+    cout << "[SKIP]" << endl;
     #endif
 
     cout << "Done." << endl << endl;
