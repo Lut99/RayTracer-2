@@ -4,7 +4,7 @@
  * Created:
  *   12/07/2020, 16:50:58
  * Last edited:
- *   13/07/2020, 15:13:49
+ *   13/07/2020, 17:42:19
  * Auto updated?
  *   Yes
  *
@@ -59,6 +59,20 @@
 #define CUDA_COPYFROM_ASSERT() \
     if (cudaPeekAtLastError() != cudaSuccess) { \
         std::cerr << "ERROR: " << __DEBUG_CONTEXT__ << ": Could not copy to host: " << cudaGetErrorString(cudaGetLastError()) << std::endl << std::endl; \
+        exit(-1); \
+    }
+
+/* Performs a CUDA-assert following a cuda Device-To-Device-copy. */
+#define CUDA_COPYON_ASSERT() \
+    if (cudaPeekAtLastError() != cudaSuccess) { \
+        std::cerr << "ERROR: " << __DEBUG_CONTEXT__ << ": Could not copy locally on device: " << cudaGetErrorString(cudaGetLastError()) << std::endl << std::endl; \
+        exit(-1); \
+    }
+
+/* Performs a CUDA-assert following a cuda memset. */
+#define CUDA_MEMSET_ASSERT() \
+    if (cudaPeekAtLastError() != cudaSuccess) { \
+        std::cerr << "ERROR: " << __DEBUG_CONTEXT__ << ": Could not set memory on device: " << cudaGetErrorString(cudaGetLastError()) << std::endl << std::endl; \
         exit(-1); \
     }
 
