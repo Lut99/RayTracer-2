@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:24 PM
  * Last edited:
- *   12/07/2020, 17:11:38
+ *   13/07/2020, 13:39:37
  * Auto updated?
  *   Yes
  *
@@ -23,7 +23,7 @@
 
 #include "GPUDev.hpp"
 
-#include "Coordinate.hpp"
+#include "PixelCoord.hpp"
 
 
 namespace RayTracer {
@@ -36,7 +36,7 @@ namespace RayTracer {
         /* Determines if we're using local values or external values. */
         bool is_external;
         /* Position of the Pixel in the parent Frame. */
-        Coordinate pos;
+        PixelCoord frame_pos;
 
         /* Locally-stored red-value, only used when is_external = false. */
         double local_r;
@@ -46,7 +46,7 @@ namespace RayTracer {
         double local_b;
 
         /* Constructor for the Pixel struct, only accessible from the Frame class. */
-        HOST_DEVICE Pixel(const Coordinate& pos, double* const data);
+        HOST_DEVICE Pixel(const PixelCoord& pos, double* const data);
     
     public:
         /* Reference to the red-channel value. */
@@ -80,13 +80,15 @@ namespace RayTracer {
         /* Allows the pixel to be indexed numerically (mutable). */
         HOST_DEVICE double& operator[](const size_t i);
 
+        /* Returns the position of the Pixel in the frame. */
+        HOST_DEVICE inline PixelCoord pos() const { return this->pos; }
         /* Returns the x-position of the Pixel. */
-        HOST_DEVICE inline size_t x() const { return this->pos.x; }
+        HOST_DEVICE inline pixel_coord x() const { return this->pos.x; }
         /* Returns the y-position of the Pixel. */
-        HOST_DEVICE inline size_t y() const { return this->pos.y; }
+        HOST_DEVICE inline pixel_coord y() const { return this->pos.y; }
 
         /* Copy assignment operator for the Pixel class. */
-        HOST_DEVICE Pixel& operator=(Pixel other);
+        HOST_DEVICE inline Pixel& operator=(const Pixel& other) { return *this = Pixel(other); }
         /* Move assignment operator for the Pixel class. */
         HOST_DEVICE Pixel& operator=(Pixel&& other);
         /* Swap operator for the Pixel class. */
@@ -126,20 +128,18 @@ namespace RayTracer {
         /* Mutable iterator for the Frame class. */
         class iterator {
         private:
-            /* Index of the last-used element. */
-            Coordinate pos;
-            /* Width of the parent Frame. */
-            size_t width;
-            /* Height of the parent Frame. */
-            size_t height;
             /* Reference to the internal frame. */
             Frame* data;
+            /* Index of the last-used element. */
+            PixelCoord pos;
+            /* Maximum index of the last-used element. */
+            PixelCoord max;
 
         public:
             /* Constructor for the iterator class, starting at the beginning (0, 0). */
             HOST_DEVICE iterator(Frame* frame);
             /* Constructor for the iterator class, starting at a specified beginning. */
-            HOST_DEVICE iterator(Frame* frame, const Coordinate& pos);
+            HOST_DEVICE iterator(Frame* frame, const PixelCoord& pos);
 
             /* Checks if two iterators are equal. */
             HOST_DEVICE inline bool operator==(const iterator& other) { return this->data == other.data && this->pos.x == other.pos.x && this->pos.y == other.pos.y; }
@@ -151,33 +151,31 @@ namespace RayTracer {
             /* Moves the iterator n positions forward, where n is linear through the grid. */
             HOST_DEVICE iterator operator+(size_t n) const;
             /* Moves the iterator x and y positions forward over the x- and y-axis respectively. */
-            HOST_DEVICE iterator operator+(const Coordinate& n) const;
+            HOST_DEVICE iterator operator+(const PixelCoord& n) const;
             /* Moves the iterator n positions forward, where n is linear through the grid. */
             HOST_DEVICE iterator& operator+=(size_t n);
             /* Moves the iterator x and y positions forward over the x- and y-axis respectively. */
-            HOST_DEVICE iterator& operator+=(const Coordinate& n);
+            HOST_DEVICE iterator& operator+=(const PixelCoord& n);
 
             /* Dereferences the iterator. */
-            HOST_DEVICE inline Pixel operator*() const { return this->data->operator[]({this->pos.x, this->pos.y}); }
+            HOST_DEVICE inline Pixel operator*() const { return (*(this->data))[PixelCoord(this->pos.x, this->pos.y)]; }
         };
 
         /* Non-mutable iterator for the Frame class. */
         class const_iterator {
         private:
-            /* Index of the last-used element. */
-            Coordinate pos;
-            /* Width of the parent Frame. */
-            size_t width;
-            /* Height of the parent Frame. */
-            size_t height;
             /* Reference to the internal frame. */
             const Frame* data;
+            /* Index of the last-used element. */
+            PixelCoord pos;
+            /* Maximum index of the last-used element. */
+            PixelCoord max;
 
         public:
             /* Constructor for the Frame class, starting at the beginning (0, 0). */
             HOST_DEVICE const_iterator(const Frame* frame);
             /* Constructor for the Frame class, starting at a specified beginning. */
-            HOST_DEVICE const_iterator(const Frame* frame, const Coordinate& pos);
+            HOST_DEVICE const_iterator(const Frame* frame, const PixelCoord& pos);
 
             /* Checks if two iterators are equal. */
             HOST_DEVICE inline bool operator==(const const_iterator& other) { return this->data == other.data && this->pos.x == other.pos.x && this->pos.y == other.pos.y; }
@@ -189,14 +187,14 @@ namespace RayTracer {
             /* Moves the iterator n positions forward, where n is linear through the grid. */
             HOST_DEVICE const_iterator operator+(size_t n) const;
             /* Moves the iterator x and y positions forward over the x- and y-axis respectively. */
-            HOST_DEVICE const_iterator operator+(const Coordinate& n) const;
+            HOST_DEVICE const_iterator operator+(const PixelCoord& n) const;
             /* Moves the iterator n positions forward, where n is linear through the grid. */
             HOST_DEVICE const_iterator& operator+=(size_t n);
             /* Moves the iterator x and y positions forward over the x- and y-axis respectively. */
-            HOST_DEVICE const_iterator& operator+=(const Coordinate& n);
+            HOST_DEVICE const_iterator& operator+=(const PixelCoord& n);
 
             /* Dereferences the iterator. */
-            HOST_DEVICE inline const Pixel operator*() const { return this->data->operator[]({this->pos.x, this->pos.y}); }
+            HOST_DEVICE inline const Pixel operator*() const { return (*(this->data))[PixelCoord(this->pos.x, this->pos.y)]; }
         };
 
         /* Constructor for the Frame class. Initializes an image with the specified dimensions with uninitialized pixels. */
@@ -220,9 +218,9 @@ namespace RayTracer {
         #endif
 
         /* Indexes the Frame for a given coordinate (non-mutable). */
-        HOST_DEVICE const Pixel operator[](const Coordinate& index) const;
+        HOST_DEVICE const Pixel operator[](const PixelCoord& index) const;
         /* Indexes the Frame for a given coordinate (mutable). */
-        HOST_DEVICE Pixel operator[](const Coordinate& index);
+        HOST_DEVICE Pixel operator[](const PixelCoord& index);
 
         /* Writes the Frame to a PNG of our choosing. */
         void toPNG(const std::string& path) const;
