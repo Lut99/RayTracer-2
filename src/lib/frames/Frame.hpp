@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:24 PM
  * Last edited:
- *   13/07/2020, 14:38:15
+ *   16/07/2020, 17:16:54
  * Auto updated?
  *   Yes
  *
@@ -74,6 +74,9 @@ namespace RayTracer {
 
         /* Allos the pixel to be subtracted from another pixel. */
         HOST_DEVICE inline Pixel operator-(const Pixel& other) const { return Pixel(this->r - other.r, this->g - other.g, this->b - other.b); }
+
+        /* Allows the pixel to be multiplied to a constant to scale it. */
+        HOST_DEVICE inline Pixel operator*(double c) const { return Pixel(this->r * c, this->g * c, this->b * c); }
 
         /* Allows the pixel to be indexed numerically (non-mutable). */
         HOST_DEVICE double operator[](const size_t i) const;
