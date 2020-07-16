@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:24 PM
  * Last edited:
- *   16/07/2020, 17:18:55
+ *   16/07/2020, 17:20:01
  * Auto updated?
  *   Yes
  *
@@ -72,7 +72,10 @@ namespace RayTracer {
         /* Allows the pixel to be compared to see if all values are less or equal than given constant. */
         HOST_DEVICE inline bool operator<=(double c) const { return this->r <= c && this->g <= c && this->b <= c; }
 
-        /* Allos the pixel to be subtracted from another pixel. */
+        /* Allows the pixel to be added to another pixel. */
+        HOST_DEVICE inline Pixel operator+(const Pixel& other) const { return Pixel(this->r + other.r, this->g + other.g, this->b + other.b); }
+
+        /* Allows the pixel to be subtracted from another pixel. */
         HOST_DEVICE inline Pixel operator-(const Pixel& other) const { return Pixel(this->r - other.r, this->g - other.g, this->b - other.b); }
 
         /* Allows the pixel to be multiplied to a constant to scale it. */
