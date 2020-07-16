@@ -55,7 +55,8 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "bit": "cpp"
+        "bit": "cpp",
+        "cerrno": "cpp"
     },
     "C_Cpp.dimInactiveRegions": false
 }

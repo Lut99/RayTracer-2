@@ -1,7 +1,10 @@
-.PHONY: default all cpugpuhybrid gpucopy collectfour dirs
+.PHONY: default all cpugpuhybrid gpucopy collectfour signals dirs
 default: all
 
-all: cpugpuhybrid gpucopy collectfour
+all: cpugpuhybrid gpucopy collectfour signals
+
+clean:
+	rm -f bin/*.out
 
 ### DIR RULES ###
 bin:
@@ -23,3 +26,8 @@ gpucopy: bin/gpucopy.out
 bin/collectfour.out: collectfour.cpp | dirs
 	g++ -std=c++17 -O2 -Wall -Wextra -o $@ $^
 collectfour: bin/collectfour.out
+
+### SIGNALS ###
+bin/signals.out: signals.cpp | dirs
+	g++ -std=c++17 -O2 -Wall -Wextra -o bin/signals.out signals.cpp
+signals: bin/signals.out

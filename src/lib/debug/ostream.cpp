@@ -4,7 +4,7 @@
  * Created:
  *   13/07/2020, 16:22:52
  * Last edited:
- *   13/07/2020, 17:53:36
+ *   16/07/2020, 14:28:37
  * Auto updated?
  *   Yes
  *
@@ -97,20 +97,69 @@ RayTracer::ostream::~ostream() {
 __device__ void write(size_t n, const char* str) {
     int to_write = 0;
     for (size_t i = 0; i < n; i++) {
-        // Collect up to four characters in the integer
-        if (i % 4 )
+        // Fetch the character
+        char c = str[i];
+
+        // Put at the correct place in the to_write int
+        int index = i % 4;
+        to_write |= ((unsigned int) value) << (8 * index);
+        if (i == n - 1 || index == 3) {
+            // Send the index off the the buffer
+            ((unsigned int*) this->buffer)[i / 4] = to_write;
+            to_write = 0;
+        }
     }
+    this->n_chars += n;
 }
 
 __device__ void write(const char* str) {
-    
+    int to_write = 0;
+    for (size_t i = 0; ; i++) {
+        // Fetch the character
+        char c = str[i];
+
+        // Put at the correct place in the to_write int
+        int index = i % 4;
+        to_write |= ((unsigned int) value) << (8 * index);
+        if (c == '\0' || index == 3) {
+            // Send the index off the the buffer
+            ((unsigned int*) this->buffer)[i / 4] = to_write;
+            to_write = 0;
+        }
+
+        // Stop clause
+        if (c == '\0') { break; }
+    }
 }
 #endif
 
 
 
 void RayTracer::ostream::sync() {
-    
+    #ifdef CUDA
+    CUDA_DEBUG("ostream sync");
+
+    // Get everything back from the GPU.
+    unsigned char cpu_buffer[this->n_chars];
+    cudaMemcpy((void*) cpu_buffer, (void*) this->buffer, sizeof(unsigned char) * this->n_chars, cudaMemcpyDeviceToHost);
+    CUDA_COPYFROM_ASSERT();
+
+    // Write the characters one-by-one, handling special characters as well.
+    for (size_t i = 0; i < this->n_chars; i++) {
+        char c = (char) cpu_buffer[i];
+        
+        switch(c) {
+            default:
+                this->os << c;
+                break;
+        }
+    }
+
+    // Reset the GPU-side buffer
+    cudaMemset((void*) this->buffer, 0, sizeof(unsigned char) * this->n_chars);
+    CUDA_MEMSET_ASSERT();
+    this->n_chars = 0;
+    #endif
 }
 
 

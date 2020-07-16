@@ -4,7 +4,7 @@
  * Created:
  *   13/07/2020, 16:23:18
  * Last edited:
- *   13/07/2020, 17:47:22
+ *   16/07/2020, 14:19:25
  * Auto updated?
  *   Yes
  *
@@ -21,8 +21,8 @@
 #define OSTREAM_HPP
 
 #include <ostream>
-#include <type_traits>
 
+#include "Operators.hpp"
 #include "GPUDev.hpp"
 
 namespace RayTracer {
