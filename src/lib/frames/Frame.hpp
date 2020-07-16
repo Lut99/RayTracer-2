@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:24 PM
  * Last edited:
- *   16/07/2020, 17:16:54
+ *   16/07/2020, 17:18:55
  * Auto updated?
  *   Yes
  *
@@ -97,6 +97,9 @@ namespace RayTracer {
         /* Swap operator for the Pixel class. */
         friend HOST_DEVICE void swap(Pixel& p1, Pixel& p2);
 
+        /* Allows a character to be multiplied to the Pixel. */
+        friend HOST_DEVICE inline Pixel operator*(double c, const Pixel& p);
+
         /* Allows the Pixel to be printed to a stream. */
         friend std::ostream& operator<<(std::ostream& os, const Pixel& pixel);
 
@@ -104,6 +107,8 @@ namespace RayTracer {
         friend class Frame;
     };
 
+    /* Allows a character to be multiplied to the Pixel. */
+    HOST_DEVICE inline Pixel operator*(double c, const Pixel& p) { return p * c; }
     /* Allows the Pixel to be printed to a stream. */
     std::ostream& operator<<(std::ostream& os, const Pixel& pixel);
     /* Swap operator for the Pixel class. */
