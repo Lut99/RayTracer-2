@@ -4,7 +4,7 @@
  * Created:
  *   6/28/2020, 3:21:48 PM
  * Last edited:
- *   6/30/2020, 4:45:51 PM
+ *   16/07/2020, 18:02:36
  * Auto updated?
  *   Yes
  *
@@ -28,7 +28,7 @@ using namespace RayTracer;
 
 /***** CONSTANTS *****/
 #ifndef RENDERER
-#define RENDERER "sequential"
+#define RENDERER "seq"
 #endif
 
 
@@ -84,10 +84,7 @@ void parse_label(Options& result, const string& execpath, const string& label, c
     }
 
     // Switch to the correct label
-    if (label[0] == 'r' || label == "-renderer") {
-        // Parse the renderer used
-        cout << "TBD" << endl;
-    } else if (label[0] == 'h' || label == "-help") {
+    if (label[0] == 'h' || label == "-help") {
         // Print the help message
         print_help(cout, execpath);
         // Also, we're done
@@ -133,8 +130,8 @@ int main(int argc, const char** argv) {
     cout << " - Rendering backend : " RENDERER << endl;
     cout << endl;
 
-    // Run the renderer
-    render();
+    // Create the renderer
+    
 
     // Done
     cout << endl << "Done." << endl << endl;

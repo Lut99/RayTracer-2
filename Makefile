@@ -87,11 +87,10 @@ dirs: $(BIN) $(TST_BIN) $(OBJ) $(DIRS)
 
 raytracer: $(BIN)/raytracer.out
 
-tests: $(TST_BIN)/test_debug.out $(TST_BIN)/test_vec3.out $(TST_BIN)/test_point2.out $(TST_BIN)/test_frame.out $(TST_BIN)/test_ray.out $(TST_BIN)/test_rayiterator.out $(TST_BIN)/test_raybatchiterator.out
+tests: $(TST_BIN)/test_vec3.out $(TST_BIN)/test_point2.out $(TST_BIN)/test_frame.out $(TST_BIN)/test_ray.out $(TST_BIN)/test_rayiterator.out $(TST_BIN)/test_raybatchiterator.out
 	$(info Running tests...)
 	$(info )
 
-	$(TST_BIN)/test_debug.out
 	$(TST_BIN)/test_vec3.out
 	$(TST_BIN)/test_point2.out
 	$(TST_BIN)/test_frame.out
