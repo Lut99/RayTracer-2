@@ -4,7 +4,7 @@
  * Created:
  *   6/30/2020, 3:51:23 PM
  * Last edited:
- *   16/07/2020, 17:49:24
+ *   17/07/2020, 16:34:39
  * Auto updated?
  *   Yes
  *
@@ -42,6 +42,9 @@ namespace RayTracer {
         /* Updates the internal World object according to the programmed behaviour. */
         virtual void update();
     };
+
+    /* Creates a new renderer with general genderer options. The specific render corresponds to the backend used. */
+    Renderer* rendererFactory();
 }
 
 #endif

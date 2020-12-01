@@ -4,7 +4,7 @@
  * Created:
  *   6/28/2020, 3:21:48 PM
  * Last edited:
- *   16/07/2020, 18:02:36
+ *   17/07/2020, 17:49:54
  * Auto updated?
  *   Yes
  *
@@ -31,6 +31,12 @@ using namespace RayTracer;
 #define RENDERER "seq"
 #endif
 
+#define DEFAULT_WIDTH 320
+#define DEFAULT_HEIGHT 200
+#define DEFAULT_VFOV 90
+#define DEFAULT_UP Vec3(0, 1, 0)
+#define DEFAULT_LOOKFROM Point3(0, 0, 0)
+#define DEFAULT_LOOKAT Point3(1, 0, 0)
 
 
 /***** DEFINITIONS *****/
@@ -60,7 +66,7 @@ string tolower(const string& text) {
 /***** PARSING *****/
 /* Prints a usage message to the given stream. */
 ostream& print_usage(ostream& os, const string& execpath) {
-    os << "Usage: " << execpath << " [-h]" << endl;
+    os << "Usage: " << execpath << " [-hgp] [-whuFfa]" << endl;
     return os;
 }
 
@@ -68,8 +74,22 @@ ostream& print_usage(ostream& os, const string& execpath) {
 ostream& print_help(ostream& os, const string& execpath) {
     print_usage(os, execpath);
 
+    os << endl << "Features:" << endl;
+
+    os << endl << "Camera overrides:" << endl;
+    os << "-W,--width\tDetermines the width (in pixels) of the first camera in the scene. (DEFAULT: " << DEFAULT_WIDTH << ")" << endl;
+    os << "-H,--height\tDetermines the height (in pixels) of the first camera in the scene. (DEFAULT: " << DEFAULT_HEIGHT << ")" << endl;
+    os << "-u,--up\t\tThe in-world vector over which the Y-axis of the Frame goes. (DEFAULT: " << DEFAULT_UP << ")" << endl;
+    os << "-F,--vfov\tThe vertical field-of-view (in degrees) of the fist Camera. (DEFAULT: " << DEFAULT_VFOV << ")" << endl;
+    os << "-f,--lookfrom\tThe coordinate of the point where the Camera looks from. (DEFAULT: " << DEFAULT_LOOKFROM << ")" << endl;
+    os << "-a,--lookat\tThe coordinate of the point where the Camera looks to. (DEFAULT: " << DEFAULT_LOOKAT << ")" << endl;
+
+    os << endl << "Post-processing:" << endl;
+    os << "-g,--gamma\tIf given, corrects the gamme of the first Camera in the scene." << endl;
+
     os << endl << "Miscellaneous:" << endl;
-    os << "-h,--help\t\t\tShows this help menu." << endl;
+    os << "-p,--progress\tIf given, shows a progressbar while rendering." << endl;
+    os << "-h,--help\tShows this help menu and then exits." << endl;
 
     os << endl;
     return os;
@@ -83,14 +103,33 @@ void parse_label(Options& result, const string& execpath, const string& label, c
         exit(EXIT_FAILURE);
     }
 
-    // Switch to the correct label
-    if (label[0] == 'h' || label == "-help") {
-        // Print the help message
-        print_help(cout, execpath);
-        // Also, we're done
-        exit(EXIT_SUCCESS);
+    // Options
+    if (label == "W" || label == "-width") {
+        // Parse the next word as string
+    } else if (label == "H" || label == "-height") {
+        
+    } else if (label == "u" || label == "-up") {
+        
+    } else if (label == "F" || label == "-vfov") {
+        
+    } else if (label == "f" || label == "-lookfrom") {
+        
+    } else if (label == "a" || label == "-lookat") {
+        
     } else {
-        cout << "??? : " << label << endl;
+        for (char c : label) {
+            // Flags
+            if (c == 'g' || label == "-gamma") {
+                
+            } else if (c == 'p' || label == "-progress") {
+                
+            } else if (c == 'h' || label == "-help") {
+                // Print the help message
+                print_help(cout, execpath);
+                // Also, we're done
+                exit(EXIT_SUCCESS);
+            }
+        }
     }
 }
 
@@ -131,7 +170,11 @@ int main(int argc, const char** argv) {
     cout << endl;
 
     // Create the renderer
-    
+    Renderer* renderer = rendererFactory();
+
+    // Render the default scene
+    Frame result = renderer->render()[0];
+    result.toPNG("output/test.png");
 
     // Done
     cout << endl << "Done." << endl << endl;

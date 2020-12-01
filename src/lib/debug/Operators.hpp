@@ -1,10 +1,10 @@
-/* OPERATORS.hpp
+/* OPERATORS.cpp
  *   by Lut99
  *
  * Created:
- *   16/07/2020, 14:17:59
+ *   13/07/2020, 17:28:51
  * Last edited:
- *   16/07/2020, 14:20:46
+ *   01/12/2020, 13:21:31
  * Auto updated?
  *   Yes
  *
@@ -22,14 +22,15 @@
 #include "GPUDev.hpp"
 
 namespace RayTracer {
-    HOST_DEVICE RayTracer::ostream& RayTracer::operator<<(RayTracer::ostream& os, const char& c);
+    /* Allows characters to be printed to the ostream. */
+    HOST_DEVICE RayTracer::ostream& operator<<(RayTracer::ostream& os, const char& c);
     /* Allows character arrays to be printed to the ostream. */
-    HOST_DEVICE RayTracer::ostream& RayTracer::operator<<(RayTracer::ostream& os, const char*& c);
+    HOST_DEVICE RayTracer::ostream& operator<<(RayTracer::ostream& os, const char*& c);
     /* Allows std::strings to be printed to the ostream. */
-    HOST_DEVICE RayTracer::ostream& RayTracer::operator<<(RayTracer::ostream& os, const std::string& s);
+    HOST_DEVICE RayTracer::ostream& operator<<(RayTracer::ostream& os, const std::string& s);
     /* Allows numeric types to be printed to the ostream. */
     template <class T, typename = std::enable_if_t<std::is_signed<T>::value && std::is_integral<T>::value> >
-    HOST_DEVICE RayTracer::ostream& RayTracer::operator<<(RayTracer::ostream& os, const T& a) {
+    HOST_DEVICE RayTracer::ostream& operator<<(RayTracer::ostream& os, const T& a) {
         #ifdef __CUDA_ARCH__
         /* GPU-side code. */
         

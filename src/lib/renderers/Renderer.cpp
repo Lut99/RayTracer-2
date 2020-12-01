@@ -4,7 +4,7 @@
  * Created:
  *   16/07/2020, 17:03:51
  * Last edited:
- *   16/07/2020, 17:22:01
+ *   17/07/2020, 16:56:38
  * Auto updated?
  *   Yes
  *
@@ -25,6 +25,10 @@ using namespace RayTracer;
 
 Renderer::Renderer()
 {}
+
+Renderer::~Renderer()
+{}
+
 
 
 Pixel Renderer::background(const Ray& ray) {

@@ -28,6 +28,7 @@ RENDERER_FILE=$(OBJ)/renderers/SequentialRenderer.o
 ### DEFINE LIBRARIES ###
 LIBS := $(shell find $(LIB) -name '*.cpp')
 LIBS := $(LIBS:$(LIB)/%.cpp=$(OBJ)/%.o )
+LIBS := $(LIBS:$(OBJ)/debug/%.o= )
 DIRS := $(sort $(dir $(wildcard $(LIB)/*/)))
 INCL := $(DIRS:%=-I% )
 DIRS := $(DIRS:$(LIB)/%=$(OBJ)/% )
@@ -66,10 +67,6 @@ CC_C := -dc
 EXT_LIBS += -L/usr/local/cuda-11.0/lib64 -lcuda -lcudart
 endif
 
-else
-# Remove all renderers except seq.o
-LIBS := $(LIBS:$(OBJ)/renderers/%.o= )
-LIBS := $(LIBS) $(OBJ)/renderers/seq.o
 endif
 
 

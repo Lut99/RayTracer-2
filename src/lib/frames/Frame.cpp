@@ -4,7 +4,7 @@
  * Created:
  *   7/1/2020, 4:47:00 PM
  * Last edited:
- *   13/07/2020, 14:36:55
+ *   17/07/2020, 17:06:00
  * Auto updated?
  *   Yes
  *
@@ -64,7 +64,7 @@ HOST_DEVICE Pixel::Pixel(double r, double g, double b) :
 
 HOST_DEVICE Pixel::Pixel(const Pixel& other) :
     is_external(false),
-    frame_pos(0, 0),
+    frame_pos(other.frame_pos),
     local_r(other.r),
     local_g(other.g),
     local_b(other.b),
@@ -75,7 +75,7 @@ HOST_DEVICE Pixel::Pixel(const Pixel& other) :
 
 HOST_DEVICE Pixel::Pixel(Pixel&& other) :
     is_external(false),
-    frame_pos(0, 0),
+    frame_pos(other.frame_pos),
     local_r(other.r),
     local_g(other.g),
     local_b(other.b),
@@ -315,8 +315,9 @@ HOST_DEVICE const Pixel Frame::operator[](const Point2& index) const {
     }
 
     // Return the correct index Pixel
-    double* ptr = (double*) ((char*) this->data + index.y * this->pitch) + index.x * 3;
-    return Pixel(index, ptr);
+    size_t y = this->height - 1 - index.y;
+    double* ptr = (double*) ((char*) this->data + y * this->pitch) + index.x * 3;
+    return Pixel(Point2(index.x, y), ptr);
 }
 
 HOST_DEVICE Pixel Frame::operator[](const Point2& index) {
@@ -329,7 +330,8 @@ HOST_DEVICE Pixel Frame::operator[](const Point2& index) {
     }
 
     // Return the correct index Pixel
-    double* ptr = (double*) ((char*) this->data + index.y * this->pitch) + index.x * 3;
+    size_t y = this->height - 1 - index.y;
+    double* ptr = (double*) ((char*) this->data + y * this->pitch) + index.x * 3;
     return Pixel(index, ptr);
 }
 

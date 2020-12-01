@@ -4,7 +4,7 @@
  * Created:
  *   08/07/2020, 22:21:30
  * Last edited:
- *   13/07/2020, 15:29:12
+ *   17/07/2020, 16:56:40
  * Auto updated?
  *   Yes
  *
@@ -127,8 +127,8 @@ HOST_DEVICE void Camera::recompute() {
 
 HOST_DEVICE Ray Camera::cast(size_t x, size_t y, bool) const {
     // Cast a ray through the given pixel at x and y
-    double s = x / this->frame_width;
-    double t = y / this->frame_height;
+    double s = x / ((double) this->frame_width - 1);
+    double t = y / ((double) this->frame_height - 1);
     return Ray(this->origin, this->lower_left + s * this->horizontal + t * this->vertical - this->origin);
 }
 
